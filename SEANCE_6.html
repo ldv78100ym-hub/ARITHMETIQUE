@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S6 : Nombres Premiers et Décomposition</title>
+    <script type="text/javascript" id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+    </script>
+    <script>
+        // Configuration MathJax, standard pour toutes les séances
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']], // Délimiteurs inline $...$ et \(...\)
+                displayMath: [['$$', '$$'], ['\\[', '\\]']] // Délimiteurs display $$...$$ et \[...\]
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+        // --- FONCTIONS UTILITAIRES GÉNÉRALES ---
+        /**
+         * Génère un nombre aléatoire (utilisé pour les exemples)
+         * @param {number} min - minimum inclusif
+         * @param {number} max - maximum inclusif
+         */
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+        /**
+         * Fonction générique pour basculer l'affichage de l'aide/solution et de la démonstration.
+         */
+        function toggleHelp(button, contentId, defaultText) {
+            const content = document.getElementById(contentId);
+            const isVisible = content.style.display === 'block';
+            if (isVisible) {
+                content.style.display = 'none';
+                button.textContent = defaultText;
+                button.classList.remove('active');
+            } else {
+                content.style.display = 'block';
+                // Logique pour déterminer le texte du bouton de masquage
+                let newText;
+                if (defaultText.toLowerCase().includes('explications supplémentaires') || defaultText.toLowerCase().includes('justification de la méthode')) {
+                    newText = 'Masquer les explications supplémentaires';
+                } else if (defaultText.toLowerCase().includes('démonstration')) {
+                    newText = 'Masquer la dém.';
+                } else if (defaultText.toLowerCase().includes('exemple')) {
+                    newText = 'Masquer l\'explication';
+                } else {
+                    newText = 'Masquer la ' + defaultText.toLowerCase().replace(/\s\(.*\)/, '');
+                }
+                button.textContent = newText;
+                button.classList.add('active');
+                if (window.MathJax) {
+                    MathJax.typeset([content]);
+                }
+            }
+        }
+        // --- FONCTIONS SPÉCIFIQUES DE DIVISIBILITÉ ---
+        /** Règle de Divisibilité par 2, 3, 5, 9 (Règles simples) */
+        function getSimpleDivisibilityExample(n, divisor) {
+            let result = { n, isDivisible: n % divisor === 0, steps: "" };
+            const sumDigits = n.toString().split('').reduce((acc, digit) => acc + parseInt(digit), 0);
+            const lastDigit = n % 10;
+            const lastTwoDigits = n % 100;
+            switch (divisor) {
+                case 2:
+                    result.steps = `<p><strong>Critère :</strong> Un nombre est divisible par $2$ si son dernier chiffre est pair ($0$, $2$, $4$, $6$, $8$).</p>`;
+                    result.steps += `<p>Le dernier chiffre de ${n} est $\\mathbf{${lastDigit}}$. ${lastDigit % 2 === 0 ? 'Il est pair.' : 'Il est impair.'}</p>`;
+                    break;
+                case 3:
+                    result.steps = `<p><strong>Critère :</strong> Un nombre est divisible par $3$ si la somme de ses chiffres est divisible par $3$.</p>`;
+                    result.steps += `<p>Somme des chiffres : $S = ${n.toString().split('').join(' + ')} = \\mathbf{${sumDigits}}$.</p>`;
+                    result.steps += `<p>Puisque $${sumDigits} \\div 3 = ${Math.floor(sumDigits/3)}$ avec un reste de ${sumDigits % 3}, la somme ${sumDigits} ${sumDigits % 3 === 0 ? 'est' : 'n\'est pas'} divisible par 3.</p>`;
+                    break;
+                case 5:
+                    result.steps = `<p><strong>Critère :</strong> Un nombre est divisible par $5$ si son dernier chiffre est $0$ ou $5$.</p>`;
+                    result.steps += `<p>Le dernier chiffre de ${n} est $\\mathbf{${lastDigit}}$. ${lastDigit === 0 || lastDigit === 5 ? 'Il est 0 ou 5.' : 'Il n\'est ni 0 ni 5.'}</p>`;
+                    break;
+                case 9:
+                    result.steps = `<p><strong>Critère :</strong> Un nombre est divisible par $9$ si la somme de ses chiffres est divisible par $9$.</p>`;
+                    result.steps += `<p>Somme des chiffres : $S = ${n.toString().split('').join(' + ')} = \\mathbf{${sumDigits}}$.</p>`;
+                    result.steps += `<p>Puisque $${sumDigits} \\div 9 = ${Math.floor(sumDigits/9)}$ avec un reste de ${sumDigits % 9}, la somme ${sumDigits} ${sumDigits % 9 === 0 ? 'est' : 'n\'est pas'} divisible par 9.</p>`;
+                    break;
+                default:
+                    return result;
+            }
+            result.steps += result.isDivisible
+                ? `<p><strong>Conclusion :</strong> $${n}$ est divisible par $\\mathbf{${divisor}}$. ($${n} = ${divisor} \\times ${n/divisor}$)</p>`
+                : `<p><strong>Conclusion :</strong> $${n}$ n'est pas divisible par $\\mathbf{${divisor}}$. (Reste : $${n % divisor}$)</p>`;
+            return result;
+        }
+        /** Règle de Divisibilité par 7, 13, 17, 19 (Règles par soustraction/addition du dernier chiffre) */
+        function getAdvancedDivisibilityExample(n, divisor, multiplier, operation) {
+            let currentN = n;
+            let steps = `<p><strong>Critère :</strong> On applique la méthode de simplification successive jusqu'à obtenir un petit nombre.</p><ol>`;
+            let isDivisible = false;
+            const opSymbol = operation === 'subtract' ? '-' : '+';
+            // Loop max 4 times to avoid infinite loop with large numbers
+            for (let i = 0; i < 4; i++) {
+                if (currentN < 100) {
+                    isDivisible = currentN % divisor === 0;
+                    steps += `<li>Le nombre réduit est $\\mathbf{${currentN}}$ ${currentN >= divisor ? `. La division de $${currentN}$ par $${divisor}$ donne un reste de $${currentN % divisor}$.` : `.`}</li>`;
+                    break;
+                }
+                const lastDigit = currentN % 10;
+                const remainingDigits = Math.floor(currentN / 10);
+                let nextN;
+                if (operation === 'subtract') {
+                    nextN = remainingDigits - (lastDigit * multiplier);
+                    steps += `<li>On part de $${currentN}$. On calcule $${remainingDigits} - (${multiplier} \\times ${lastDigit}) = \\mathbf{${nextN}}$.</li>`;
+                } else { // operation === 'add'
+                    nextN = remainingDigits + (lastDigit * multiplier);
+                    steps += `<li>On part de $${currentN}$. On calcule $${remainingDigits} + (${multiplier} \\times ${lastDigit}) = \\mathbf{${nextN}}$.</li>`;
+                }
+                currentN = Math.abs(nextN); // Utiliser la valeur absolue
+            }
+            if (isDivisible) {
+                steps += `<p><strong>Conclusion :</strong> Comme le nombre final $${currentN}$ est divisible par $${divisor}$, alors $${n}$ est divisible par $\\mathbf{${divisor}}$.</p>`;
+            } else {
+                steps += `<p><strong>Conclusion :</strong> Comme le nombre final $${currentN}$ n'est pas divisible par $${divisor}$ (ou le reste est non nul), alors $${n}$ n'est pas divisible par $\\mathbf{${divisor}}$.</p>`;
+            }
+            return { n, isDivisible, steps };
+        }
+        /** Règle de Divisibilité par 11 (Somme alternée) */
+        function getRule11Example(n) {
+            let nStr = n.toString();
+            let sumPair = 0; // Chiffres aux positions paires (en partant de la droite, position 0 = unité)
+            let sumImpair = 0; // Chiffres aux positions impaires
+            for (let i = 0; i < nStr.length; i++) {
+                const digit = parseInt(nStr[nStr.length - 1 - i]);
+                if (i % 2 === 0) {
+                    sumPair += digit; // Position 0, 2, 4... (unités, centaines...)
+                } else {
+                    sumImpair += digit; // Position 1, 3, 5... (dizaines, milliers...)
+                }
+            }
+            const difference = Math.abs(sumPair - sumImpair);
+            const isDivisible = difference % 11 === 0;
+            let steps = `<p><strong>Critère :</strong> On calcule la différence alternée des sommes des chiffres aux positions paires et impaires.</p>`;
+            steps += `<ul>`;
+            steps += `<li>Somme des chiffres de rangs pairs (droite) : $S_{pair} = ${sumPair}$</li>`;
+            steps += `<li>Somme des chiffres de rangs impairs (droite) : $S_{impair} = ${sumImpair}$</li>`;
+            steps += `</ul>`;
+            steps += `<p>Différence : $D = |S_{pair} - S_{impair}| = |${sumPair} - ${sumImpair}| = \\mathbf{${difference}}$.</p>`;
+            if (difference === 0) {
+                steps += `<p>Puisque la différence est $\\mathbf{0}$, elle est divisible par $11$.</p>`;
+            } else if (difference % 11 === 0) {
+                 steps += `<p>Puisque la différence est $\\mathbf{${difference}}$, elle est divisible par $11$. ($${difference} = 11 \\times ${difference/11}$)</p>`;
+            } else {
+                 steps += `<p>Puisque la différence est $${difference}$, et $${difference}$ n'est pas divisible par 11. ($${difference} \\div 11$ donne un reste de ${difference % 11}$) </p>`;
+            }
+            steps += isDivisible
+                ? `<p><strong>Conclusion :</strong> $${n}$ est divisible par <strong>11</strong>. ($${n} = 11 \\times ${n/11}$)</p>`
+                : `<p><strong>Conclusion :</strong> $${n}$ n'est pas divisible par <strong>11</strong>.</p>`;
+            return { n, isDivisible, steps };
+        }
+        // --- GÉNÉRATEUR D'EXEMPLE GLOBAL POUR LA SECTION ---
+        function generateDivisibilityExample(divisor) {
+            let n;
+            let data;
+            // Générer un nombre aléatoire (3 à 5 chiffres)
+            const min = 100;
+            const max = 99999;
+            // On génère un cas sur deux divisible/non-divisible (sauf pour 2, 3, 5, 9 où c'est plus facile)
+            const isDivisibleCase = Math.random() < 0.5;
+            if (divisor === 2 || divisor === 3 || divisor === 5 || divisor === 9) {
+                // Pour ces règles simples, on génère un nombre brut
+                n = getRandomInt(min, 9999);
+                data = getSimpleDivisibilityExample(n, divisor);
+            } else {
+                // Pour les règles avancées, on s'assure que le nombre est suffisamment grand (au moins 3 chiffres)
+                const targetFactor = getRandomInt(10, 50); // Facteur multiplicatif
+                if (isDivisibleCase) {
+                    n = divisor * targetFactor;
+                } else {
+                    // S'assurer qu'il n'est pas divisible
+                    n = (divisor * targetFactor) + getRandomInt(1, divisor - 1);
+                }
+                // Assurer qu'on reste dans la plage [min, max]
+                n = Math.min(n, max);
+                n = Math.max(n, min);
+                if (divisor === 11) {
+                    data = getRule11Example(n);
+                } else if (divisor === 7) {
+                    data = getAdvancedDivisibilityExample(n, 7, 2, 'subtract');
+                } else if (divisor === 13) {
+                    data = getAdvancedDivisibilityExample(n, 13, 4, 'add');
+                } else if (divisor === 17) {
+                    data = getAdvancedDivisibilityExample(n, 17, 5, 'subtract');
+                } else if (divisor === 19) {
+                    data = getAdvancedDivisibilityExample(n, 19, 2, 'add');
+                } else {
+                    return; // Inconnu
+                }
+            }
+            const questionElement = document.getElementById(`rule-${divisor}-question`);
+            const solElement = document.getElementById(`rule-${divisor}-sol`);
+            // Mise à jour du contenu
+            questionElement.innerHTML = `L'entier $N = ${data.n}$ est-il divisible par $\\mathbf{${divisor}}$ ?`;
+            solElement.innerHTML = `<strong>Explication détaillée pour $N = ${data.n}$ :</strong>${data.steps}`;
+            // Cacher la solution et réinitialiser le bouton
+            solElement.style.display = 'none';
+            const button = document.querySelector(`#container-rule-${divisor} .btn-solution`);
+            button.textContent = 'Voir l\'Exemple & Solution';
+            button.classList.remove('active');
+            if (window.MathJax) {
+                MathJax.typeset([questionElement, solElement]);
+            }
+        }
+        // --- FONCTIONS EXISTANTES DU FICHIER PRÉCÉDENT ---
+        /**
+         * Calcule la décomposition en facteurs premiers et génère la solution détaillée tabulaire.
+         */
+        function getPrimeFactorizationData(n) {
+            let num = n;
+            if (num <= 1) return { n, factors: {}, factorization: n.toString(), steps: "" };
+            let factors = {};
+            let d = 2;
+            let steps = "";
+            // Début du format de division tabulaire en LaTeX
+            steps += `$$\\begin{array}{r|l} \\text{Dividende} & \\text{Diviseur premier} \\\\ \\hline`;
+            let currentNum = n; // Numérateur actuel
+            // 1. Gestion du facteur 2
+            while (num % 2 === 0) {
+                factors[2] = (factors[2] || 0) + 1;
+                steps += `${currentNum} & 2 \\\\`;
+                num /= 2;
+                currentNum = num;
+            }
+            // 2. Gestion des facteurs impairs
+            d = 3;
+            while (d * d <= num) {
+                while (num % d === 0) {
+                    factors[d] = (factors[d] || 0) + 1;
+                    steps += `${currentNum} & ${d} \\\\`;
+                    num /= d;
+                    currentNum = num;
+                }
+                d += 2; // On teste seulement les nombres impairs (3, 5, 7, 11...)
+            }
+            // 3. S'il reste un nombre > 1, c'est le dernier facteur premier
+            if (num > 1) {
+                factors[num] = (factors[num] || 0) + 1;
+                steps += `${currentNum} & ${num} \\\\`;
+                currentNum = 1;
+            }
+            steps += `1 & \\text{Fin} \\\\`;
+            steps += `\\end{array}$$`;
+            // Construction du résultat final
+            let factorization = Object.entries(factors).map(([prime, exponent]) => {
+                return exponent === 1 ? prime : `${prime}^{${exponent}}`;
+            }).join(" \\times ");
+            // Commentaire final très détaillé
+            steps += `
+                <p>
+                    <strong>Commentaire de la méthode :</strong> On divise le nombre de gauche par le plus petit de ses diviseurs premiers (méthode de la barre verticale). On répète l'opération sur le quotient obtenu jusqu'à obtenir $\\mathbf{1}$. Le résultat est le produit de tous les facteurs premiers de la colonne de droite.
+                </p>
+                <p>
+                    <strong>Décomposition finale :</strong>
+                    $$${n} = ${factorization}$$
+                </p>
+            `;
+            return { n, factors, factorization: factorization, steps: steps };
+        }
+        /**
+         * Teste la primalité d'un nombre N et génère la solution détaillée.
+         */
+        function getPrimaliteTestData(n) {
+            if (n <= 1) return { n, isPrime: false, steps: "<p>N est inférieur ou égal à 1. Par définition, un nombre premier doit être supérieur ou égal à 2.</p>" };
+            if (n === 2) return { n, isPrime: true, steps: "<p>2 est le seul nombre pair premier.</p>" };
+            const sqrtN = Math.floor(Math.sqrt(n));
+            let isPrime = true;
+            // Liste des nombres premiers à tester jusqu'à 61 (pour N jusqu'à 4096)
+            let primeDivisorsToTest = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61];
+            // Filtrer les nombres premiers à tester en fonction de sqrt(N)
+            primeDivisorsToTest = primeDivisorsToTest.filter(p => p <= sqrtN);
+            let steps = `<p><strong>Démarche :</strong></p>`;
+            steps += `<p>On calcule la racine carrée de l'entier : $\\sqrt{${n}} \\approx ${Math.sqrt(n).toFixed(2)}$. Nous devons tester la divisibilité par tous les nombres premiers $p$ tels que $p \\le ${sqrtN}$.</p>`;
+            if (primeDivisorsToTest.length === 0) {
+                 steps += `<p>Puisque $\\sqrt{${n}}$ est inférieur au premier nombre premier à tester (2), $\\mathbf{${n}}$ <strong>est un nombre premier</strong>.</p>`;
+                 return { n, isPrime: true, steps };
+            }
+            steps += `<p>La liste des diviseurs premiers à tester est : $\\mathbf{${primeDivisorsToTest.join(', ')}}$.</p>`;
+            let finalDivisor = null;
+            steps += `<ol>`;
+            for (const p of primeDivisorsToTest) {
+                if (p === 2) {
+                    if (n % 2 === 0) {
+                        finalDivisor = 2;
+                        isPrime = false;
+                        steps += `<li><strong>Test de 2 :</strong> ${n} est pair, donc divisible par 2. $${n} = 2 \\times ${n/2}$. <strong>Arrêt du test.</strong></li>`;
+                        break;
+                    } else {
+                        steps += `<li><strong>Test de 2 :</strong> ${n} est impair, donc non divisible par 2.</li>`;
+                    }
+                } else if (p === 3) {
+                    const sumDigits = n.toString().split('').reduce((acc, digit) => acc + parseInt(digit), 0);
+                    if (n % 3 === 0) {
+                        finalDivisor = 3;
+                        isPrime = false;
+                        steps += `<li><strong>Test de 3 :</strong> La somme des chiffres est ${sumDigits}. ${sumDigits} est divisible par $3$, donc ${n} est divisible par $3$. $${n} = 3 \\times ${n/3}$. <strong>Arrêt du test.</strong></li>`;
+                        break;
+                    } else {
+                        steps += `<li><strong>Test de 3 :</strong> La somme des chiffres est ${sumDigits}. ${sumDigits} n'est pas divisible par 3.</li>`;
+                    }
+                } else if (p === 5) {
+                    if (n % 5 === 0) {
+                        finalDivisor = 5;
+                        isPrime = false;
+                        steps += `<li><strong>Test de 5 :</strong> ${n} se termine par ${n%10} (0 ou 5), donc divisible par 5. $${n} = 5 \\times ${n/5}$. <strong>Arrêt du test.</strong></li>`;
+                        break;
+                    } else {
+                        steps += `<li><strong>Test de 5 :</strong> ${n} ne se termine ni par 0 ni par 5.</li>`;
+                    }
+                } else {
+                    if (n % p === 0) {
+                        finalDivisor = p;
+                        isPrime = false;
+                        steps += `<li><strong>Test de ${p} :</strong> La division de ${n} par ${p} donne un reste de 0. $${n} = ${p} \\times ${n/p}$. <strong>Arrêt du test.</strong></li>`;
+                        break;
+                    } else {
+                        const quotient = Math.floor(n / p);
+                        const remainder = n % p;
+                        steps += `<li><strong>Test de ${p} :</strong> Division euclidienne : $${n} = ${p} \\times ${quotient} + ${remainder}$. Le reste est ${remainder} (\\ne 0).</li>`;
+                    }
+                }
+            }
+            steps += `</ol>`;
+            if (isPrime) {
+                steps += `<p><strong>Conclusion :</strong> Puisque $${n}$ n'est divisible par aucun nombre premier inférieur ou égal à $\\sqrt{${n}}$, $\\mathbf{${n}}$ <strong>est un nombre premier</strong>.</p>`;
+            } else {
+                const otherFactor = n / finalDivisor;
+                steps += `<p><strong>Conclusion :</strong> Nous avons trouvé le diviseur ${finalDivisor}. Puisque $${n} = ${finalDivisor} \\times ${otherFactor}$, $\\mathbf{${n}}$ <strong>n'est pas un nombre premier</strong> (il est composé).</p>`;
+            }
+            return { n, isPrime, steps };
+        }
+        function generateNewPrimaliteProblem() {
+            // Génère N entre 1000 et 4000 pour un test ni trop long, ni trivial (sqrt entre 31 et 63)
+            const n = Math.floor(Math.random() * 3001) + 1000;
+            const data = getPrimaliteTestData(n);
+            const questionElement = document.getElementById('ex1-question');
+            const indElement = document.getElementById('help-ex1-ind1');
+            const solElement = document.getElementById('help-ex1-sol1');
+            questionElement.innerHTML = `Déterminez si l'entier $N = ${data.n}$ est premier.`;
+            // Mise à jour de l'Indication
+            const sqrtN = Math.floor(Math.sqrt(data.n));
+            let primeDivisorsToTest = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61];
+            primeDivisorsToTest = primeDivisorsToTest.filter(p => p <= sqrtN);
+            indElement.innerHTML = `
+                <p><strong>Méthode : </strong> Il suffit de tester la divisibilité de $N$ par tous les nombres premiers $p$ tels que $p^2 \\le N$.</p>
+                <p>Calculez $\\sqrt{${data.n}} \\approx ${Math.sqrt(data.n).toFixed(2)}$. La liste des nombres premiers à tester est : $\\mathbf{${primeDivisorsToTest.join(', ')}}.$ Si $N$ n'est divisible par aucun d'eux, alors $N$ est premier.</p>
+            `;
+            // Mise à jour de la Solution
+            solElement.innerHTML = `<strong>Solution détaillée :</strong>${data.steps}`;
+            // Cacher le contenu d'aide initialement
+            indElement.style.display = 'none';
+            solElement.style.display = 'none';
+            // Réinitialiser le texte des boutons
+            const buttons = document.getElementById('container-ex1').querySelectorAll('.help-button-action');
+            buttons.forEach(button => {
+                if (button.dataset.contentId === 'help-ex1-ind1') {
+                    button.textContent = 'Indication';
+                    button.classList.remove('active');
+                } else if (button.dataset.contentId === 'help-ex1-sol1') {
+                    button.textContent = 'Solution (Détaillée)';
+                    button.classList.remove('active');
+                }
+            });
+            if (window.MathJax) {
+                MathJax.typeset([questionElement, indElement, solElement]);
+            }
+        }
+        /**
+         * Initialise l'Exercice 2 dynamique (Décomposition).
+         */
+        function generateNewFactorizationProblem() {
+            // Génère un nombre entre 100 et 1000 pour la décomposition
+            const n = Math.floor(Math.random() * 901) + 100;
+            const data = getPrimeFactorizationData(n);
+            const questionElement = document.getElementById('ex4-numbers');
+            const solElement = document.getElementById('help-ex4-sol1');
+            questionElement.innerHTML = `Déterminez la décomposition en facteurs premiers de l'entier : $N = ${data.n}.`;
+            solElement.innerHTML = `<strong>Solution détaillée (Méthode des divisions successives) :</strong>${data.steps}`;
+            solElement.style.display = 'none';
+            if (window.MathJax) {
+                MathJax.typeset([questionElement, solElement]);
+            }
+        }
+        /**
+         * Initialise l'Exercice 3 dynamique (Nombre de diviseurs).
+         */
+        function generateNewDivisorsProblem() {
+            let N;
+            let data;
+            const primeFactors = [2, 3, 5, 7];
+            do {
+                N = 1;
+                let factors = {};
+                for (let i = 0; i < 3; i++) { // Max 3 facteurs pour la simplicité
+                    let p = primeFactors[i];
+                    let alpha = Math.floor(Math.random() * 2) + 1; // exposant 1 ou 2
+                    N *= Math.pow(p, alpha);
+                }
+                data = getPrimeFactorizationData(N);
+            } while (N > 500 || N < 50);
+            // Calcul du nombre de diviseurs (d(N)) et construction de la solution détaillée
+            let numDivisors = 1;
+            let formulaSteps = "";
+            const entries = Object.entries(data.factors);
+            formulaSteps += `$$\\begin{aligned} \\text{Nombre de diviseurs } d(N) &= `;
+            formulaSteps += entries.map(e => `(\\alpha_{${e[0]}}+1)`).join(' \\times ');
+            formulaSteps += ` \\\\ &= ${entries.map(e => `(${e[1]}+1)`).join(' \\times ')} \\\\ &= `;
+            numDivisors = entries.reduce((acc, curr) => {
+                const alpha = parseInt(curr[1]);
+                return acc * (alpha + 1);
+            }, 1);
+            formulaSteps += `\\mathbf{${numDivisors}} \\end{aligned}$$`;
+            const questionElement = document.getElementById('ex5-question');
+            const indElement = document.getElementById('help-ex5-ind1');
+            const solElement = document.getElementById('help-ex5-sol1');
+            questionElement.innerHTML = `L'entier $N = ${N}$ est donné. Quel est le <strong>nombre total de diviseurs positifs</strong> de $N$ ?`;
+            indElement.innerHTML = `
+                <p>
+                    <strong>Indication :</strong> Après avoir trouvé la décomposition en facteurs premiers $N = p_1^{\\alpha_1} p_2^{\\alpha_2} \\cdots p_k^{\\alpha_k}$, utilisez la formule du Théorème Fondamental de l'Arithmétique :
+                </p>
+                $$d(N) = (\\alpha_1+1)(\\alpha_2+1)\\cdots(\\alpha_k+1)$$
+            `;
+            solElement.innerHTML = `
+                <strong>Solution détaillée :</strong>
+                <ol>
+                    <li><strong>Décomposition en facteurs premiers :</strong>
+                        <p>Nous obtenons : $$${N} = ${data.factorization}$$</p>
+                        <p>Les exposants des facteurs premiers sont : ${entries.map(e => `$\\alpha_{${e[0]}} = ${e[1]}$`).join(', ')}.</p>
+                    </li>
+                    <li><strong>Application de la formule :</strong>
+                        <p>Chaque diviseur $D$ de $N$ est de la forme $D = p_1^{\\beta_1} p_2^{\\beta_2} \cdots p_k^{\\beta_k}$ avec $0 \le \beta_i \le \alpha_i$. Le nombre de choix pour chaque $\beta_i$ est donc $(\\alpha_i + 1)$.</p>
+                        ${formulaSteps}
+                    </li>
+                </ol>
+                <p>L'entier $N = ${N}$ possède donc $\\mathbf{${numDivisors}}$ diviseurs positifs.</p>
+            `;
+            solElement.style.display = 'none';
+            indElement.style.display = 'none';
+            if (window.MathJax) {
+                MathJax.typeset([questionElement, indElement, solElement]);
+            }
+        }
+    </script>
+    <style>
+        /* CHARTE GRAPHIQUE FONDAMENTALE (S1 - Teal/Vert dominant) */
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            line-height: 1.6;
+            margin: 0 auto;
+            max-width: 900px;
+            padding: 20px;
+            color: #333;
+            background-color: #f4f7f6; /* Fond neutre et clair */
+        }
+        h1, h2, h3 {
+            font-family: Arial, sans-serif;
+            color: #004d40; /* Vert foncé/Teal (Couleur principale S1) */
+            border-bottom: 2px solid #b2dfdb; /* Ligne de séparation claire */
+            padding-bottom: 5px;
+            margin-top: 30px;
+        }
+        h1 { font-size: 2.2em; text-align: center; }
+        h2 { font-size: 1.8em; }
+        h3 { font-size: 1.4em; color: #00796b; border-bottom: 1px solid #e0f2f1; } /* Variante de couleur pour h3 */
+        /* Styles spécifiques au cours (Harmonisation Teal/Vert) */
+        .cours-propriete {
+            background-color: #e0f2f1; /* Light Teal (harmonisé avec le thème) */
+            border-left: 5px solid #00796b; /* Medium Teal */
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .cours-dem-button {
+            padding: 5px 10px;
+            margin-top: 5px;
+            background-color: #00796b; /* Teal */
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 0.9em;
+            font-weight: normal;
+        }
+        .cours-dem-button:hover {
+            background-color: #004d40;
+        }
+        .demonstration-content {
+            background-color: #fff;
+            border: 1px dashed #00796b; /* Medium Teal */
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 4px;
+            display: none;
+            font-style: italic;
+            font-size: 0.95em;
+        }
+        /* Style pour les principes logiques (Harmonisation Cyan/Teal) */
+        .principe-box {
+            background-color: #e0f7fa; /* Light Cyan/Blue (similaire au question-box pour le contraste) */
+            border: 1px solid #4db6ac; /* Medium Teal/Cyan */
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .principe-box h4 {
+            color: #004d40; /* Darkest Teal */
+            border-bottom: 1px dashed #4db6ac;
+            padding-bottom: 5px;
+        }
+        /* Styles d'exercices */
+        .question-box {
+            background-color: #e0f7fa; /* Light Cyan/Blue */
+            border: 1px solid #b2ebf2;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .help-buttons {
+            margin-top: 15px;
+            text-align: center;
+        }
+        .help-button-action, .btn-generation {
+            padding: 8px 15px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-weight: bold;
+        }
+        /* Couleurs pour les boutons d'aide (Indication=Orange, Solution=Vert) */
+        .btn-indication { background-color: #ffcc80; color: #333; }
+        .btn-solution { background-color: #a5d6a7; color: #333; }
+        .btn-generation { background-color: #4db6ac; color: white; } /* Teal */
+        .btn-indication:hover { background-color: #ffb74d; }
+        .btn-solution:hover { background-color: #81c784; }
+        .btn-generation:hover { background-color: #26a69a; }
+        .help-content {
+            background-color: #fff;
+            border: 1px dashed #00796b;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+        .help-solution {
+            border-color: #66bb6a;
+        }
+        .help-indication {
+            border-color: #ff9800;
+        }
+        .active {
+            opacity: 0.8;
+        }
+        .divisibility-rule {
+            margin-bottom: 20px;
+            padding: 10px;
+            border-left: 3px solid #00796b;
+            background-color: #f0fdfc;
+        }
+        .divisibility-rule h4 {
+            margin-top: 0;
+            color: #00796b;
+        }
+        .divisibility-rule p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Séance 6 : Nombres Premiers et Décomposition</h1>
+    <div class="content-section">
+        <h2>I. Rappel de Cours : Nombres Premiers</h2>
+        <h3>Définition Fondamentale</h3>
+        <p>Un entier naturel $p \ge 2$ est dit <strong>premier</strong> s'il n'admet que deux diviseurs positifs : $1$ et $p$.</p>
+        <div class="cours-propriete">
+            <h4>Propriété 1 : Existence d'un Diviseur Premier (Fondation)</h4>
+            <p>Tout entier $n \ge 2$ possède au moins un diviseur qui est un nombre premier.</p>
+            <button onclick="toggleHelp(this, 'dem-prop1', 'Démonstration détaillée')" class="cours-dem-button">Démonstration détaillée</button>
+            <div id="dem-prop1" class="demonstration-content">
+                <p><strong>Démonstration (Utilisation du Principe du Bon Ordre - voir Section II) :</strong></p>
+                <ol>
+                    <li>Considérons $\mathcal{D}_n$, l'ensemble des diviseurs de $n$ strictement supérieurs à 1. $\mathcal{D}_n \ne \emptyset$ car $n \in \mathcal{D}_n$.</li>
+                    <li>Par le <strong>Principe du Bon Ordre</strong>, $\mathcal{D}_n$ admet un <strong>plus petit élément</strong>, notons-le $p$.</li>
+                    <li>Nous montrons que ce $p$ est premier par l'absurde. Si $p$ n'était pas premier, il aurait un diviseur $d$ tel que $1 < d < p$.</li>
+                    <li>Puisque $d|p$ et $p|n$, par <strong>transitivité</strong> de la divisibilité, alors $d|n$. Puisque $d > 1$, $d$ est un diviseur de $n$ strictement supérieur à 1. Donc $d \in \mathcal{D}_n$.</li>
+                    <li>Or, la condition $1 < d < p$ implique que nous avons trouvé un élément $d$ dans $\mathcal{D}_n$ qui est <strong>strictement plus petit</strong> que $p$, ce qui contredit la définition de $p$ comme étant le <strong>plus petit élément</strong> de $\mathcal{D}_n$. Donc $p$ est premier. <strong>Ce diviseur premier est le 'plus petit' que possède $n$.</strong></li>
+                </ol>
+            </div>
+        </div>
+        <div class="cours-propriete">
+            <h4>Propriété 2 : Infinité des Nombres Premiers (Historique)</h4>
+            <p>Il existe une infinité de nombres premiers.</p>
+            <button onclick="toggleHelp(this, 'dem-prop2', 'Démonstration détaillée (d\'Euclide)')" class="cours-dem-button">Démonstration détaillée (d'Euclide)</button>
+            <div id="dem-prop2" class="demonstration-content">
+                <p><strong>Démonstration (d'Euclide, par l'absurde) :</strong></p>
+                <ol>
+                    <li>Supposons qu'il n'existe qu'un nombre fini de premiers : $P = \{p_1, \dots, p_k\}$.</li>
+                    <li>Construisons $N = (p_1 p_2 \cdots p_k) + 1$.</li>
+                    <li>$N$ doit avoir un diviseur premier $p$ (Propriété 1). Ce $p$ doit être dans la liste $P$, donc $p$ divise $p_1 p_2 \cdots p_k$.</li>
+                    <li>Comme $p$ divise $N$ et $p_1 p_2 \cdots p_k$, alors $p$ divise leur différence : $N - (p_1 p_2 \cdots p_k) = 1$.</li>
+                    <li>Or, un nombre premier $p$ est par définition supérieur ou égal à 2. Il ne peut donc en aucun cas diviser l'entier $1$. C'est une contradiction flagrante avec l'hypothèse de départ.</li>
+                    <li>L'hypothèse est fausse. Il existe une <strong>infinité</strong> de nombres premiers.</li>
+                </ol>
+            </div>
+        </div>
+        <div class="cours-propriete">
+            <h4>Propriété 3 : Théorème Fondamental de l'Arithmétique (TFA)</h4>
+            <p>Tout entier $n \ge 2$ s'écrit de manière unique (à l'ordre près des facteurs) sous la forme d'un produit de puissances de nombres premiers : $n = p_1^{\alpha_1} p_2^{\alpha_2} \cdots p_k^{\alpha_k}$.</p>
+            <button onclick="toggleHelp(this, 'dem-prop3', 'Justification et Idée de Preuve (Existence)')" class="cours-dem-button">Justification et Idée de Preuve (Existence)</button>
+            <div id="dem-prop3" class="demonstration-content">
+                <p><strong>Justification de l'existence (par Récurrence Forte - voir Section II) :</strong></p>
+                <ol>
+                    <li><strong>Initialisation :</strong> Pour $n=2$, $2 = 2^1$. Vrai.</li>
+                    <li><strong>Hérédité :</strong> Supposons que tout $k$ tel que $2 \le k < n$ admet une décomposition.</li>
+                    <li><strong>Conclusion :</strong> Si $n$ est premier, c'est $n^1$. Si $n$ n'est pas premier, $n = a \times b$ avec $a < n$ et $b < n$. Par hypothèse (Récurrence Forte), $a$ et $b$ se décomposent. Le produit des décompositions donne celle de $n$.</li>
+                </ol>
+                <p>
+                    <strong>Unicité :</strong> L'unicité repose sur le Lemme d'Euclide (si $p$ premier divise $ab$, alors $p$ divise $a$ ou $p$ divise $b$). Sans cette unicité, le PGCD et le PPCM ne seraient pas définis de manière cohérente.
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="content-section">
+        <h2>II. Principes Logiques et Fondations en Arithmétique 🧠</h2>
+        <p>L'Arithmétique repose sur des principes logiques forts qui permettent de prouver des propriétés pour une infinité de nombres. Ces principes sont essentiels pour la rigueur des démonstrations.</p>
+        <div class="principe-box">
+            <h4>1. Le Principe du Bon Ordre (PBO)</h4>
+            <p>Ce principe est la pierre angulaire de toute l'arithmétique :</p>
+            <p class="text-center"><strong>Tout sous-ensemble non vide de $\mathbb{N}$ (les entiers naturels positifs) possède un plus petit élément avec la condition qu'il soit borné inférieurement.</strong></p>
+            <p>
+                <strong>Pragmatisme :</strong> C'est l'outil qui permet de faire un choix dans un ensemble infini de nombres entiers. Par exemple, si vous avez l'ensemble de tous les nombres qui ne vérifient pas une propriété $P$ (appelé ensemble des contre-exemples), le PBO vous permet de cibler le <strong>plus petit</strong> d'entre eux. On peut ensuite utiliser ce plus petit élément pour montrer qu'il devrait lui aussi vérifier $P$, ce qui crée une contradiction.
+            </p>
+            <p>
+                <strong>Illustration :</strong> La preuve de la Propriété 1 (tout entier $\ge 2$ a un diviseur premier) utilise le PBO pour trouver le plus petit diviseur $>1$, et prouve que ce diviseur est forcément premier.
+            </p>
+            <button onclick="toggleHelp(this, 'pbo-child-explanation', 'Explications supplémentaires')" class="cours-dem-button">Explications supplémentaires</button>
+            <div id="pbo-child-explanation" class="demonstration-content" style="font-style: normal; background-color: #f0fff0;">
+                <p>
+                    <strong>Imagine une étagère remplie de boîtes (ce sont tes nombres entiers) !</strong> 📦📦📦
+                </p>
+                <p>
+                    Le Principe du Bon Ordre, c'est comme si je te disais : <strong>"Prends n'importe quel groupe de boîtes sur cette étagère, même un très grand groupe, tu peux TOUJOURS trouver la boîte qui a le plus petit numéro dessus."</strong>
+                </p>
+                <ul>
+                    <li>Si tu prends les boîtes $5, 12, 3$, la plus petite est $3$.</li>
+                    <li>Même si tu prends l'ensemble de <strong>tous</strong> les nombres après $100$ ($101, 102, 103, \dots$), le plus petit que tu peux choisir est toujours $\mathbf{101}$.</li>
+                </ul>
+                <p>
+                    C'est super pratique pour les mathématiciens. Quand ils ont un problème à résoudre avec beaucoup de nombres, ils disent : <strong>"Concentrons-nous d'abord sur le plus petit !"</strong>
+                </p>
+            </div>
+        </div>
+        <div class="principe-box">
+            <h4>2. Le Principe de Récurrence (Complète ou Forte)</h4>
+            <p>Ce principe permet de prouver qu'une propriété $P(n)$ est vraie pour tout entier $n \ge n_0$.</p>
+            <p class="text-center"><strong>Pour prouver une propriété $P(n)$, on suppose que $P(k)$ est vraie pour tout $k < n$, et on en déduit que $P(n)$ est vraie.</strong></p>
+            <p>
+                <strong>Pragmatisme :</strong> En arithmétique, la version "forte" est souvent utilisée. C'est l'idée que pour prouver une propriété sur un nombre $n$, on n'a pas seulement besoin de la propriété sur $n-1$, mais potentiellement sur <strong>tous</strong> les nombres qui le précèdent.
+            </p>
+            <p>
+                <strong>Illustration :</strong> La preuve de l'existence du TFA (Propriété 3) utilise la Récurrence Forte : si $n = a \times b$, on suppose que $a$ et $b$ (qui sont plus petits que $n$) se décomposent déjà, ce qui nous permet de construire la décomposition de $n$.
+            </p>
+            <button onclick="toggleHelp(this, 'recurrence-child-explanation', 'Explications supplémentaires')" class="cours-dem-button">Explications supplémentaires</button>
+            <div id="recurrence-child-explanation" class="demonstration-content" style="font-style: normal; background-color: #f0fff0;">
+                <p>
+                    <strong>Imagine une file de dominos géants !</strong> 🁤🁤🁤
+                </p>
+                <p>
+                    Le Principe de Récurrence est une façon super sûre de savoir que <strong>tous</strong> les dominos vont tomber, même s'il y en a des milliers.
+                </p>
+                <ul>
+                    <li><strong>Étape 1 (L'initialisation) :</strong> Tu dois t'assurer que le tout premier domino ($n_0=1$) tombe. <strong>C'est le départ !</strong></li>
+                    <li><strong>Étape 2 (L'hérédité) :</strong> Tu dois montrer que si <strong>n'importe quel domino</strong> (le $k$-ième domino, par exemple) tombe, alors il fait <strong>automatiquement</strong> tomber le domino juste après (le $k+1$-ième domino).</li>
+                </ul>
+                <p>
+                    Si ces deux choses sont vraies, tu es certain que TOUS les dominos vont tomber, du début à la fin ! En mathématiques, on utilise cette méthode pour prouver que des règles sont vraies pour tous les nombres, un par un, sans jamais s'arrêter.
+                </p>
+            </div>
+        </div>
+        <div class="principe-box">
+            <h4>3. La Descente Infinie (Méthode de Fermat)</h4>
+            <p>Ce principe est l'équivalent logique du Principe du Bon Ordre, mais appliqué par l'absurde :</p>
+            <p class="text-center"><strong>Il n'existe aucune suite infinie et strictement décroissante d'entiers naturels positifs.</strong></p>
+            <p>
+                <strong>Pragmatisme :</strong> Lorsqu'une preuve par l'absurde (supposons qu'il existe une solution $S$) mène à la construction d'une nouvelle solution $S'$ qui est <strong>strictement plus petite</strong> que $S$ (en gardant les solutions dans $\mathbb{N}^*$), on peut répéter l'opération indéfiniment. Cela crée une "descente infinie" ($S > S' > S'' > \dots$), ce qui est impossible dans $\mathbb{N}^*$.
+            </p>
+            <p>
+                <strong>Illustration :</strong> La méthode de la descente infinie est utilisée pour prouver que certaines équations n'ont aucune solution entière non nulle. L'<strong>Algorithme d'Euclide</strong> (traité en S4) repose d'ailleurs sur ce concept pour garantir son arrêt : la suite des restes est strictement décroissante ($r_0 > r_1 > r_2 > \dots \ge 0$) et doit donc s'arrêter en un nombre fini d'étapes.
+            </p>
+            <button onclick="toggleHelp(this, 'fermat-child-explanation', 'Explications supplémentaires')" class="cours-dem-button">Explications supplémentaires</button>
+            <div id="fermat-child-explanation" class="demonstration-content" style="font-style: normal; background-color: #f0fff0;">
+                <p>
+                    <strong>Imagine que tu essaies de monter une échelle infinie en descendant !</strong> 🪜
+                </p>
+                <p>
+                    La Descente Infinie, c'est le principe qui dit : <strong>"Tu ne peux pas continuer à descendre pour toujours sur une échelle qui commence au sol (au nombre 1) !"</strong>
+                </p>
+                <ul>
+                    <li>Si tu commences au barreau 10.</li>
+                    <li>Tu descends au barreau 9.</li>
+                    <li>Puis au 8, au 7, et ainsi de suite...</li>
+                </ul>
+                <p>
+                    Tu vas <strong>obligatoirement</strong> arriver au barreau numéro 1, puis à la terre (le 0), et tu ne peux plus descendre en restant sur une échelle numérotée positivement.
+                </p>
+                <p>
+                    <strong>Comment les mathématiciens l'utilisent :</strong> Ils prouvent qu'un problème n'a pas de solution en montrant que si une solution $S$ existe, on peut toujours en trouver une plus petite ($S' < S$). En répétant cette étape, on créerait une descente infinie de solutions de plus en plus petites... ce qui est impossible. Donc, la solution de départ $S$ n'a jamais existé !
+                </p>
+            </div>
+        </div>
+    </div>
+    <h2 class="exercice-title">III. Exercice 1 : Test de Primalité (Dynamique)</h2>
+    <div id="container-ex1" class="question-box">
+        <p id="ex1-question">Chargement...</p>
+        <div class="help-buttons">
+            <button onclick="toggleHelp(this, 'help-ex1-ind1', 'Indication')" class="btn-indication help-button-action" data-content-id="help-ex1-ind1">Indication</button>
+            <button onclick="toggleHelp(this, 'help-ex1-sol1', 'Solution (Détaillée)')" class="btn-solution help-button-action" data-content-id="help-ex1-sol1">Solution (Détaillée)</button>
+            <button onclick="generateNewPrimaliteProblem()" class="btn-generation">Générer un nouvel exercice</button>
+        </div>
+        <div id="help-ex1-ind1" class="help-content help-indication"></div>
+        <div id="help-ex1-sol1" class="help-content help-solution"></div>
+    </div>
+    <h2 class="exercice-title">IV. Exercice 2 : Décomposition en Facteurs Premiers (Dynamique)</h2>
+    <div id="container-ex4" class="question-box">
+        <p id="ex4-numbers" class="pgcd-numbers">Chargement...</p>
+        <div class="help-buttons">
+            <button onclick="toggleHelp(this, 'help-ex4-sol1', 'Solution (Détaillée)')" class="btn-solution help-button-action" data-content-id="help-ex4-sol1">Solution (Détaillée)</button>
+            <button onclick="generateNewFactorizationProblem()" class="btn-generation">Générer un nouvel exercice</button>
+        </div>
+        <div id="help-ex4-sol1" class="help-content help-solution"></div>
+    </div>
+    <h2 class="exercice-title">V. Exercice 3 : Application du TFA (Nombre de Diviseurs - Dynamique)</h2>
+    <div id="container-ex5" class="question-box">
+        <p id="ex5-question">Chargement...</p>
+        <div class="help-buttons">
+            <button onclick="toggleHelp(this, 'help-ex5-ind1', 'Indication (Formule)')" class="btn-indication help-button-action" data-content-id="help-ex5-ind1">Indication (Formule)</button>
+            <button onclick="toggleHelp(this, 'help-ex5-sol1', 'Solution (Détaillée)')" class="btn-solution help-button-action" data-content-id="help-ex5-sol1">Solution (Détaillée)</button>
+            <button onclick="generateNewDivisorsProblem()" class="btn-generation">Générer un nouvel exercice</button>
+        </div>
+        <div id="help-ex5-ind1" class="help-content help-indication"></div>
+        <div id="help-ex5-sol1" class="help-content help-solution"></div>
+    </div>
+    <hr>
+    <h2>VI. Nouveaux Exercices sur les Thèmes de l'Arithmétique</h2>
+    <h2 class="exercice-title">VI. Exercice 4 : Nombre de Facteurs Premiers Distincts ($\omega(N)$)</h2>
+    <div id="container-ex6" class="question-box">
+        <p id="ex6-question">Soit $N = 720$. Combien $N$ possède-t-il de facteurs premiers <strong>distincts</strong> ? (Réponse : $\omega(N)$)</p>
+        <div class="help-buttons">
+            <button onclick="toggleHelp(this, 'help-ex6-sol1', 'Solution')" class="btn-solution help-button-action" data-content-id="help-ex6-sol1">Solution</button>
+        </div>
+        <div id="help-ex6-sol1" class="help-content help-solution">
+            <p><strong>Démarche :</strong></p>
+            <p>La première étape est de trouver la décomposition en facteurs premiers de $N=720$.</p>
+            <ol>
+                <li><strong>Décomposition en facteurs premiers :</strong>
+                    $$720 = 72 \times 10$$
+                    $$72 = 8 \times 9 = 2^3 \times 3^2$$
+                    $$10 = 2 \times 5$$
+                    En regroupant, on obtient :
+                    $$720 = (2^3 \times 3^2) \times (2^1 \times 5^1) = \mathbf{2^4 \times 3^2 \times 5^1}$$
+                </li>
+                <li><strong>Comptage des facteurs distincts :</strong>
+                    <strong>Rappel :</strong> $\omega(N)$ (oméga de N) est le nombre de facteurs premiers <strong>distincts</strong> (les bases) dans la décomposition. Les exposants (4, 2, 1) n'affectent pas ce compte.
+                    Les facteurs premiers distincts sont les bases : $\mathbf{2}$, $\mathbf{3}$ et $\mathbf{5}$.
+                </li>
+            </ol>
+            <p><strong>Conclusion :</strong> L'entier $N=720$ possède <strong>3</strong> facteurs premiers distincts. $\omega(720) = 3$.</p>
+        </div>
+    </div>
+    <h2 class="exercice-title">VII. Exercice 5 : PGCD et PPCM par Décomposition</h2>
+    <div id="container-ex7" class="question-box">
+        <p id="ex7-question">Déterminez le PGCD et le PPCM des entiers $A = 2^3 \times 3^1 \times 5^2$ et $B = 2^2 \times 3^4 \times 7^1$.</p>
+        <div class="help-buttons">
+            <button onclick="toggleHelp(this, 'help-ex7-ind1', 'Indication')" class="btn-indication help-button-action" data-content-id="help-ex7-ind1">Indication</button>
+            <button onclick="toggleHelp(this, 'help-ex7-sol1', 'Solution (Détaillée)')" class="btn-solution help-button-action" data-content-id="help-ex7-sol1">Solution (Détaillée)</button>
+        </div>
+        <div id="help-ex7-ind1" class="help-content help-indication">
+            <p>Pour garantir une comparaison complète, réécrivez chaque nombre en utilisant <strong>tous</strong> les facteurs premiers impliqués (y compris ceux avec un exposant 0).</p>
+            <ul>
+                <li>$\text{PGCD}(A, B)$ : Produit des facteurs communs affectés du <strong>plus petit</strong> des exposants.</li>
+                <li>$\text{PPCM}(A, B)$ : Produit de tous les facteurs (communs ou non) affectés du <strong>plus grand</strong> des exposants.</li>
+            </ul>
+        </div>
+        <div id="help-ex7-sol1" class="help-content help-solution">
+            <p><strong>Démarche :</strong></p>
+            <p>On réécrit les nombres en utilisant tous les facteurs premiers impliqués ($2, 3, 5, 7$) pour faciliter la comparaison :</p>
+            <p>$$A = 2^{\mathbf{3}} \times 3^{\mathbf{1}} \times 5^{\mathbf{2}} \times 7^{\mathbf{0}}$$</p>
+            <p>$$B = 2^{\mathbf{2}} \times 3^{\mathbf{4}} \times 5^{\mathbf{0}} \times 7^{\mathbf{1}}$$</p>
+            <h4>Calcul du PGCD (Minimiser les exposants)</h4>
+            <p>Pour calculer le <strong>PGCD</strong> (Plus Grand Commun Diviseur), nous prenons uniquement les facteurs communs (ici, 2 et 3) et nous leur appliquons le <strong>plus petit</strong> des exposants. C'est essentiel pour que le résultat soit bien un diviseur de $A$ ET de $B$.</p>
+            <p>$$\text{PGCD}(A, B) = 2^{\min(3, 2)} \times 3^{\min(1, 4)} \times 5^{\min(2, 0)} \times 7^{\min(0, 1)}$$</p>
+            $$\text{PGCD}(A, B) = 2^2 \times 3^1 \times 5^0 \times 7^0 = \mathbf{4 \times 3 = 12}$$
+            <h4>Calcul du PPCM (Maximiser les exposants)</h4>
+            <p>Pour calculer le <strong>PPCM</strong> (Plus Petit Commun Multiple), nous prenons <strong>tous</strong> les facteurs premiers présents (2, 3, 5, 7) et nous leur appliquons le <strong>plus grand</strong> des exposants. C'est essentiel pour que le résultat soit bien un multiple de $A$ ET de $B$.</p>
+            <p>$$\text{PPCM}(A, B) = 2^{\max(3, 2)} \times 3^{\max(1, 4)} \times 5^{\max(2, 0)} \times 7^{\max(0, 1)}$$</p>
+            $$\text{PPCM}(A, B) = 2^3 \times 3^4 \times 5^2 \times 7^1 = 8 \times 81 \times 25 \times 7 = \mathbf{113\,400}$$
+        </div>
+    </div>
+    <h2 class="exercice-title">VIII. Exercice 6 : Test de Primalité (Évolué)</h2>
+    <div id="container-ex8" class="question-box">
+        <p id="ex8-question">L'entier $N = 1691$ est-il premier ?</p>
+        <div class="help-buttons">
+            <button onclick="toggleHelp(this, 'help-ex8-ind1', 'Indication')" class="btn-indication help-button-action" data-content-id="help-ex8-ind1">Indication</button>
+            <button onclick="toggleHelp(this, 'help-ex8-sol1', 'Solution (Détaillée)')" class="btn-solution help-button-action" data-content-id="help-ex8-sol1">Solution (Détaillée)</button>
+        </div>
+        <div id="help-ex8-ind1" class="help-content help-indication">
+            <p>Calculez $\sqrt{1691}$. Vous devez tester la divisibilité par tous les nombres premiers $p$ inférieurs ou égaux à cette valeur.</p>
+            <p>La liste des nombres premiers à tester est : $\mathbf{2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41}$.</p>
+        </div>
+        <div id="help-ex8-sol1" class="help-content help-solution">
+            <p><strong>Démarche :</strong></p>
+            <p>Nous appliquons la même règle que dans l'Exercice 1 : nous testons la divisibilité par les nombres premiers $p \le \sqrt{N}$.</p>
+            <p>On calcule $\sqrt{1691} \approx 41,12$. Nous devons tester les nombres premiers jusqu'à 41 inclus.</p>
+            <p>Après vérification des divisions successives :</p>
+            <ul>
+                <li>$1691 \div 2, 3, 5$ (Rapidement écartés par les critères de divisibilité).</li>
+                <li>$1691 \div 7 = 241$ reste $4$.</li>
+                <li>$1691 \div 11 = 153$ reste $8$.</li>
+                <li>$1691 \div 13 = 130$ reste $1$.</li>
+                <li>$1691 \div 17 = 99$ reste $8$.</li>
+                <li>$1691 \div 19 = \mathbf{89}$ reste $\mathbf{0}$.</li>
+            </ul>
+            <p>Puisque $1691 = 19 \times 89$, nous avons trouvé un diviseur propre (19) inférieur à $\sqrt{1691} \approx 41,12$.</p>
+            <p><strong>Conclusion :</strong> $\mathbf{1691}$ <strong>n'est pas un nombre premier</strong>; il s'agit d'un nombre composé. Sa décomposition est $19 \times 89$.</p>
+        </div>
+    </div>
+    <h2 class="exercice-title">IX. Exercice 7 : Récurrence Simple (Somme des Entiers)</h2>
+    <div id="container-ex9" class="question-box">
+        <p id="ex9-question">En utilisant le <strong>Principe de Récurrence Simple</strong>, démontrez que pour tout $n \in \mathbb{N}^*$, la somme des $n$ premiers entiers est donnée par :</p>
+        $$\sum_{k=1}^{n} k = 1 + 2 + \dots + n = \frac{n(n+1)}{2}$$
+        <div class="help-buttons">
+            <button onclick="toggleHelp(this, 'help-ex9-sol1', 'Solution (Détaillée)')" class="btn-solution help-button-action" data-content-id="help-ex9-sol1">Solution (Détaillée)</button>
+        </div>
+        <div id="help-ex9-sol1" class="help-content help-solution">
+            <p><strong>Démonstration par Récurrence Simple :</strong></p>
+            <p>Soit $P(n)$ la propriété : $\sum_{k=1}^{n} k = \frac{n(n+1)}{2}$. Nous devons la prouver pour tout $n \ge n_0 = 1$.</p>
+            <ol>
+                <li><strong>Initialisation (Vérification pour $n=1$) :</strong>
+                    Vérifions si $P(1)$ est vraie.
+                    $$\sum_{k=1}^{1} k = 1$$
+                    $$\text{Formule : } \frac{1(1+1)}{2} = \frac{2}{2} = 1$$
+                    $P(1)$ est vraie. L'échelle est posée au premier barreau.
+                </li>
+                <li><strong>Hérédité (Passage de $n$ à $n+1$) :</strong>
+                    Supposons $P(n)$ vraie pour un certain entier $n \ge 1$ (Hypothèse de Récurrence).
+                    $$\sum_{k=1}^{n} k = \frac{n(n+1)}{2}$$
+                    Démonstrons alors que $P(n+1)$ est vraie, c'est-à-dire : $\sum_{k=1}^{n+1} k = \frac{(n+1)(n+2)}{2}$.
+                    Nous partons de la somme pour $n+1$ :
+                    $$\sum_{k=1}^{n+1} k = \left(\sum_{k=1}^{n} k\right) + (n+1)$$
+                    En utilisant l'Hypothèse de Récurrence pour la partie entre parenthèses :
+                    $$\sum_{k=1}^{n+1} k = \frac{n(n+1)}{2} + (n+1)$$
+                    Factorisons par le terme commun $(n+1)$ :
+                    $$\sum_{k=1}^{n+1} k = (n+1) \left( \frac{n}{2} + 1 \right)$$
+                    Mettons la parenthèse au même dénominateur :
+                    $$\sum_{k=1}^{n+1} k = (n+1) \left( \frac{n+2}{2} \right) = \frac{(n+1)(n+2)}{2}$$
+                    $P(n+1)$ est vraie. Le domino $n$ fait tomber le domino $n+1$.
+                </li>
+            </ol>
+            <p><strong>Conclusion :</strong> La propriété est vraie pour $n=1$, et si elle est vraie pour $n$, elle est vraie pour $n+1$. Par le Principe de Récurrence, $P(n)$ est vraie pour tout $n \in \mathbb{N}^*$.</p>
+        </div>
+    </div>
+    <h2 class="exercice-title">X. Exercice 8 : Question Conceptuelle (Unicité du TFA)</h2>
+    <div id="container-ex10" class="question-box">
+        <p id="ex10-question">Le Théorème Fondamental de l'Arithmétique (TFA) affirme que la décomposition d'un entier en facteurs premiers est <strong>unique</strong>. Expliquez en une phrase ce qui se passerait en mathématiques si cette unicité n'était pas garantie.</p>
+        <div class="help-buttons">
+            <button onclick="toggleHelp(this, 'help-ex10-sol1', 'Solution')" class="btn-solution help-button-action" data-content-id="help-ex10-sol1">Solution</button>
+        </div>
+        <div id="help-ex10-sol1" class="help-content help-solution">
+            <p><strong>Réponse détaillée :</strong></p>
+            <p>Si la décomposition en facteurs premiers n'était pas unique (par exemple, si $6$ pouvait être décomposé en $2 \times 3$ et aussi $2 \times 5$), l'Arithmétique élémentaire perdrait toute cohérence :</p>
+            <ul>
+                <li>Le <strong>PGCD</strong> et le <strong>PPCM</strong> des nombres ne seraient pas définis de manière unique, car leurs règles de calcul dépendent des exposants et des bases dans l'unique décomposition.</li>
+                <li>Toutes les branches mathématiques basées sur la structure des entiers (théorie des nombres, cryptographie, arithmétique modulaire) s'effondreraient par manque de fondation fiable.</li>
+            </ul>
+            <p>En bref : <strong>Sans l'unicité du TFA, toutes les notions de divisibilité, de PGCD/PPCM et la structure même des nombres entiers ne seraient plus cohérentes ni utilisables.</strong></p>
+        </div>
+    </div>
+    <hr>
+    <h2 class="exercice-title">XI. Règles de Divisibilité Détaillées 🧮</h2>
+    <p>Ces règles permettent de vérifier rapidement si un grand nombre est divisible par un diviseur donné sans effectuer la division complète.</p>
+    <div class="principe-box">
+        <h3 style="margin-top: 0;">Règles Simples (2, 3, 5, 9)</h3>
+        <div id="container-rule-2" class="divisibility-rule">
+            <h4>Divisibilité par 2</h4>
+            <p>Un entier est divisible par <strong>2</strong> si et seulement si son <strong>dernier chiffre est un nombre pair</strong> (0, 2, 4, 6 ou 8).</p>
+            <button onclick="toggleHelp(this, 'dem-rule-2', 'Démonstration détaillée (Justification de la méthode)')" class="cours-dem-button">Démonstration détaillée (Justification de la méthode)</button>
+            <div id="dem-rule-2" class="demonstration-content">
+                <p><strong>Justification de la règle par la décomposition décimale :</strong></p>
+                <p>Nous devons montrer que la divisibilité par 2 ne dépend que du dernier chiffre (l'unité $u$).</p>
+                <ol>
+                    <li><strong>Décomposition décimale :</strong>
+                        Tout entier naturel $N$ peut être écrit comme la somme de ses dizaines et de son unité :
+                        $$N = 10 \times R + u$$
+                        où $R$ est l'entier formé par tous les chiffres sauf l'unité, et $u$ est l'unité de $N$ ($u \in \{0, 1, \dots, 9\}$).<br>
+                        (Exemple : Si $N = 354$, alors $R = 35$ et $u = 4$. $354 = 10 \times 35 + 4$).
+                    </li>
+                    <li><strong>Propriété du facteur 10 :</strong>
+                        Nous examinons le terme $10 \times R$. Puisque $10 = 2 \times 5$, on peut réécrire ce terme :
+                        $$10 \times R = 2 \times (5 \times R)$$
+                        Comme $5 \times R$ est un entier, le terme $10 \times R$ est un <strong>multiple de 2</strong>. Par conséquent, il est <strong>toujours divisible par 2</strong>.
+                    </li>
+                    <li><strong>Conclusion sur la somme :</strong>
+                        L'entier $N$ est donc la somme d'un multiple de 2 et de son unité :
+                        $$N = \text{(Multiple de 2)} + u$$
+                        Pour que la somme $N$ soit divisible par 2, il est nécessaire et suffisant que le terme restant, <strong>l'unité $u$</strong>, soit lui aussi divisible par 2.
+                    </li>
+                    <li><strong>Finalisation :</strong>
+                        L'unité $u$ est divisible par $2$ si et seulement si $u$ est un chiffre pair, c'est-à-dire $u \in \{0, 2, 4, 6, 8\}$.
+                </ol>
+                <p>La règle est donc justifiée : <strong>la divisibilité de $N$ par 2 est uniquement déterminée par le dernier chiffre $u$.</strong></p>
+            </div>
+            <p id="rule-2-question"></p>
+            <button onclick="generateDivisibilityExample(2)" class="btn-generation">Générer un exemple</button>
+            <button onclick="toggleHelp(this, 'rule-2-sol', 'Voir l\'Exemple & Solution')" class="btn-solution help-button-action">Voir l'Exemple & Solution</button>
+            <div id="rule-2-sol" class="help-content help-solution"></div>
+        </div>
+        <div id="container-rule-3" class="divisibility-rule">
+            <h4>Divisibilité par 3</h4>
+            <p>Un entier est divisible par <strong>$3$</strong> si et seulement si la <strong>somme de ses chiffres est divisible par $3$</strong>.</p>
+            <button onclick="toggleHelp(this, 'dem-rule-3', 'Démonstration détaillée (Justification de la méthode)')" class="cours-dem-button">Démonstration détaillée (Justification de la méthode)</button>
+            <div id="dem-rule-3" class="demonstration-content">
+                <p><strong>Justification de la règle par la décomposition décimale :</strong></p>
+                <p>Nous devons montrer que la divisibilité par 3 ne dépend que de la somme des chiffres $S$.</p>
+                <ol>
+                    <li><strong>Décomposition décimale :</strong>
+                        Tout entier $N$ s'écrit en base 10 comme la somme de ses chiffres $d_i$ multipliés par les puissances de 10 correspondantes :
+                        $$N = d_n 10^n + \dots + d_2 10^2 + d_1 10^1 + d_0 10^0$$
+                        où $d_i$ sont les chiffres de $N$.
+                    </li>
+                    <li><strong>Propriété des puissances de 10 :</strong>
+                        Chaque puissance de 10 peut être écrite comme un multiple de 3 plus 1.
+                        En effet, $10 = 9 + 1 = (3 \times 3) + 1$, $100 = 99 + 1 = (3 \times 33) + 1$, etc.
+                        Généralement, pour tout exposant $k \ge 0$:
+                        $$10^k = 3 \times M_k + 1$$
+                        où $M_k$ est un entier ($M_k$ est la suite $0, 3, 33, 333, \dots$).
+                    </li>
+                    <li><strong>Substitution dans $N$ :</strong>
+                        Substituons cette forme ($10^k = 3M_k + 1$) dans la décomposition de $N$ :
+                        $$N = d_n (3M_n + 1) + \dots + d_1 (3M_1 + 1) + d_0 (3M_0 + 1)$$
+                    </li>
+                    <li><strong>Réorganisation des termes :</strong>
+                        Nous développons et regroupons les termes qui sont des multiples de 3 d'un côté, et les termes restants de l'autre :
+                        $$N = (3M_n d_n + \dots + 3M_1 d_1 + 3M_0 d_0) + (d_n + \dots + d_1 + d_0)$$
+                        Nous factorisons le premier groupe par 3 :
+                        $$N = 3 \times \underbrace{(M_n d_n + \dots + M_1 d_1 + M_0 d_0)}_{\text{Entier}} + \underbrace{(d_n + \dots + d_1 + d_0)}_{\text{Somme des chiffres } S}$$
+                        $$N = \text{(Multiple de 3)} + S$$
+                    </li>
+                    <li><strong>Conclusion :</strong>
+                        Pour que la somme $N$ soit divisible par 3, il est nécessaire et suffisant que le terme restant, <strong>la somme des chiffres $S$</strong>, soit lui aussi divisible par 3 (car l'addition d'un multiple de 3 à un nombre $S$ ne change pas la divisibilité par 3 de $S$).
+                </ol>
+                <p>La règle est donc justifiée : <strong>la divisibilité de $N$ par 3 est uniquement déterminée par la somme de ses chiffres $S$.</strong></p>
+            </div>
+            <p id="rule-3-question"></p>
+            <button onclick="generateDivisibilityExample(3)" class="btn-generation">Générer un exemple</button>
+            <button onclick="toggleHelp(this, 'rule-3-sol', 'Voir l\'Exemple & Solution')" class="btn-solution help-button-action">Voir l'Exemple & Solution</button>
+            <div id="rule-3-sol" class="help-content help-solution"></div>
+        </div>
+        <div id="container-rule-5" class="divisibility-rule">
+            <h4>Divisibilité par 5</h4>
+            <p>Un entier est divisible par <strong>$5$</strong> si et seulement si son <strong>dernier chiffre est $0$ ou $5$</strong>.</p>
+            <button onclick="toggleHelp(this, 'dem-rule-5', 'Démonstration détaillée (Justification de la méthode)')" class="cours-dem-button">Démonstration détaillée (Justification de la méthode)</button>
+            <div id="dem-rule-5" class="demonstration-content">
+                <p><strong>Justification de la règle par la décomposition décimale :</strong></p>
+                <p>Nous devons montrer que la divisibilité par 5 ne dépend que du dernier chiffre (l'unité $u$).</p>
+                <ol>
+                    <li><strong>Décomposition décimale :</strong>
+                        Tout entier naturel $N$ peut être écrit comme la somme de ses dizaines et de son unité :
+                        $$N = 10 \times R + u$$
+                        où $R$ est l'entier formé par tous les chiffres sauf l'unité, et $u$ est l'unité de $N$ ($u \in \{0, 1, \dots, 9\}$).<br>
+                        (Exemple : Si $N = 355$, alors $R = 35$ et $u = 5$. $355 = 10 \times 35 + 5$).
+                    </li>
+                    <li><strong>Propriété du facteur 10 :</strong>
+                        Nous examinons le terme $10 \times R$. Puisque $10 = 5 \times 2$, on peut réécrire ce terme :
+                        $$10 \times R = 5 \times (2 \times R)$$
+                        Comme $2 \times R$ est un entier, le terme $10 \times R$ est un <strong>multiple de 5</strong>. Par conséquent, il est <strong>toujours divisible par $5$</strong>.
+                    </li>
+                    <li><strong>Conclusion sur la somme :</strong>
+                        L'entier $N$ est donc la somme d'un multiple de 5 et de son unité :
+                        $$N = \text{(Multiple de 5)} + u$$
+                        Pour que la somme $N$ soit divisible par 5, il est nécessaire et suffisant que le terme restant, <strong>l'unité $u$</strong>, soit lui aussi divisible par $5$.
+                    </li>
+                    <li><strong>Finalisation :</strong>
+                        L'unité $u$ est divisible par $5$ si et seulement si $u$ est égal à $0$ ou $5$, car ce sont les seuls chiffres dans l'intervalle $[0, 9]$ qui sont multiples de $5$.
+                </ol>
+                <p>La règle est donc justifiée : <strong>la divisibilité de $N$ par 5 est uniquement déterminée par le dernier chiffre $u$.</strong></p>
+            </div>
+            <p id="rule-5-question"></p>
+            <button onclick="generateDivisibilityExample(5)" class="btn-generation">Générer un exemple</button>
+            <button onclick="toggleHelp(this, 'rule-5-sol', 'Voir l\'Exemple & Solution')" class="btn-solution help-button-action">Voir l'Exemple & Solution</button>
+            <div id="rule-5-sol" class="help-content help-solution"></div>
+        </div>
+        <div id="container-rule-9" class="divisibility-rule">
+            <h4>Divisibilité par 9</h4>
+            <p>Un entier est divisible par <strong>$9$</strong> si et seulement si la <strong>somme de ses chiffres est divisible par $9$</strong>.</p>
+            <button onclick="toggleHelp(this, 'dem-rule-9', 'Démonstration détaillée (Justification de la méthode)')" class="cours-dem-button">Démonstration détaillée (Justification de la méthode)</button>
+            <div id="dem-rule-9" class="demonstration-content">
+                <p><strong>Justification de la règle par la décomposition décimale :</strong></p>
+                <p>Nous devons montrer que la divisibilité par 9 ne dépend que de la somme des chiffres $S$.</p>
+                <ol>
+                    <li><strong>Décomposition décimale :</strong>
+                        Tout entier $N$ s'écrit en base 10 comme la somme de ses chiffres $d_i$ multipliés par les puissances de 10 correspondantes :
+                        $$N = d_n 10^n + \dots + d_2 10^2 + d_1 10^1 + d_0 10^0$$
+                        où $d_i$ sont les chiffres de $N$.
+                    </li>
+                    <li><strong>Propriété des puissances de 10 :</strong>
+                        Chaque puissance de 10 peut être écrite comme un multiple de 9 plus 1.
+                        En effet, $10 = 9 + 1$, $100 = 99 + 1 = (9 \times 11) + 1$, $1000 = 999 + 1 = (9 \times 111) + 1$, etc.
+                        Généralement, pour tout exposant $k \ge 0$:
+                        $$10^k = 9 \times M_k + 1$$
+                        où $M_k$ est un entier.
+                    </li>
+                    <li><strong>Substitution dans $N$ :</strong>
+                        Substituons cette forme ($10^k = 9M_k + 1$) dans la décomposition de $N$ :
+                        $$N = d_n (9M_n + 1) + \dots + d_1 (9M_1 + 1) + d_0 (9M_0 + 1)$$
+                    </li>
+                    <li><strong>Réorganisation des termes :</strong>
+                        Nous développons et regroupons les termes qui sont des multiples de 9 d'un côté, et les termes restants de l'autre :
+                        $$N = (9M_n d_n + \dots + 9M_1 d_1 + 9M_0 d_0) + (d_n + \dots + d_1 + d_0)$$
+                        Nous factorisons le premier groupe par 9 :
+                        $$N = 9 \times \underbrace{(M_n d_n + \dots + M_1 d_1 + M_0 d_0)}_{\text{Entier}} + \underbrace{(d_n + \dots + d_1 + d_0)}_{\text{Somme des chiffres } S}$$
+                        $$N = \text{(Multiple de 9)} + S$$
+                    </li>
+                    <li><strong>Conclusion :</strong>
+                        Pour que la somme $N$ soit divisible par 9, il est nécessaire et suffisant que le terme restant, <strong>la somme des chiffres $S$</strong>, soit lui aussi divisible par 9 (car l'addition d'un multiple de 9 à un nombre $S$ ne change pas la divisibilité par $9$ de $S$).
+                </ol>
+                <p>La règle est donc justifiée : <strong>la divisibilité de $N$ par 9 est uniquement déterminée par la somme de ses chiffres $S$.</strong></p>
+            </div>
+            <p id="rule-9-question"></p>
+            <button onclick="generateDivisibilityExample(9)" class="btn-generation">Générer un exemple</button>
+            <button onclick="toggleHelp(this, 'rule-9-sol', 'Voir l\'Exemple & Solution')" class="btn-solution help-button-action">Voir l'Exemple & Solution</button>
+            <div id="rule-9-sol" class="help-content help-solution"></div>
+        </div>
+    </div>
+    <div class="principe-box">
+        <h3 style="margin-top: 0;">Règles Avancées (7, 11, 13, 17, 19)</h3>
+        <div id="container-rule-7" class="divisibility-rule">
+            <h4>Divisibilité par 7 (Méthode de la Soustraction)</h4>
+            <p>Un entier $N$ est divisible par <strong>$7$</strong> si et seulement si $N'$ est divisible par $7$, où $N'$ est obtenu en <strong>soustraiant le double du dernier chiffre</strong> au reste du nombre. (Répéter l'opération si $N'$ est grand).</p>
+            <button onclick="toggleHelp(this, 'dem-rule-7', 'Démonstration détaillée (Justification de la méthode)')" class="cours-dem-button">Démonstration détaillée (Justification de la méthode)</button>
+            <div id="dem-rule-7" class="demonstration-content">
+                <p><strong>Justification de la méthode de simplification successive ($N' = R - 2u$) :</strong></p>
+                <p>L'objectif est de montrer que la divisibilité de $\mathbf{N}$ par 7 est équivalente à la divisibilité du nombre simplifié $\mathbf{N'} = \mathbf{R} - \mathbf{2u}$ par 7, où $N=10R+u$.</p>
+                <ol>
+                    <li><strong>Décomposition de $N$ :</strong>
+                        Tout nombre $N$ peut être écrit sous la forme :
+                        $$N = 10R + u$$
+                        où $R$ est la partie du nombre sans le dernier chiffre (le "reste") et $u$ est le dernier chiffre (l'unité).
+                        (Exemple: si $N=357$, $R=35$ et $u=7$.)
+                    </li>
+                    <li><strong>Lien entre $N$ et $N'$ (Sens $N' \implies N$) :</strong>
+                        Nous montrons que si $N'$ est un multiple de 7, alors $N$ l'est aussi.
+                        Supposons que $N'$ est divisible par $7$, donc $N' = R - 2u = 7k$ (où $k$ est un entier).
+                        On en déduit que $R = 7k + 2u$.
+                    </li>
+                    <li><strong>Substitution dans $N$ :</strong>
+                        Substituons cette expression de $R$ dans la formule de $N$:
+                        $$N = 10R + u$$
+                        $$N = 10 \times (7k + 2u) + u$$
+                        $$N = 70k + 20u + u$$
+                        $$N = 70k + 21u$$
+                    </li>
+                    <li><strong>Conclusion :</strong>
+                        Puisque $70k = 7 \times 10k$ et $21u = 7 \times 3u$, nous pouvons factoriser par 7 :
+                        $$N = 7 \times (10k) + 7 \times (3u)$$
+                        $$N = 7 \times (10k + 3u)$$
+                        Comme $10k + 3u$ est un entier, $N$ est un multiple de 7.
+                        <strong>La méthode fonctionne : $N$ est divisible par $7$ si $N'$ l'est.</strong>
+                    </li>
+                </ol>
+            </div>
+            <p id="rule-7-question"></p>
+            <button onclick="generateDivisibilityExample(7)" class="btn-generation">Générer un exemple</button>
+            <button onclick="toggleHelp(this, 'rule-7-sol', 'Voir l\'Exemple & Solution')" class="btn-solution help-button-action">Voir l'Exemple & Solution</button>
+            <div id="rule-7-sol" class="help-content help-solution"></div>
+        </div>
+        <div id="container-rule-11" class="divisibility-rule">
+            <h4>Divisibilité par 11 (Méthode de la Somme Alternée)</h4>
+            <p>Un entier est divisible par <strong>$11$</strong> si et seulement si la <strong>somme alternée de ses chiffres</strong> (chiffres aux rangs pairs moins chiffres aux rangs impairs, en partant de la droite) est divisible par $11$ (c'est-à-dire $0$, $11$, $-11$, $22$, etc.).</p>
+            <button onclick="toggleHelp(this, 'dem-rule-11', 'Démonstration détaillée (Justification de la méthode)')" class="cours-dem-button">Démonstration détaillée (Justification de la méthode)</button>
+            <div id="dem-rule-11" class="demonstration-content">
+                <p><strong>Justification de la règle par la décomposition décimale (sans congruences) :</strong></p>
+                <p>
+                    Nous allons montrer que la divisibilité d'un nombre $N$ par 11 dépend uniquement de la <strong>somme alternée de ses chiffres</strong> (en partant de la droite).
+                </p>
+                <p>
+                    <strong>Étape 1 : Décomposition décimale de $N$</strong>
+                </p>
+                <p>
+                    Tout entier $N$ peut être écrit en base 10 comme une somme de ses chiffres multipliés par des puissances de 10 :
+                    $$N = d_n \times 10^n + d_{n-1} \times 10^{n-1} + \dots + d_1 \times 10^1 + d_0 \times 10^0$$
+                    où $d_0$ est le chiffre des unités, $d_1$ le chiffre des dizaines, etc.
+                </p>
+                <p>
+                    <strong>Étape 2 : Propriété clé des puissances de 10 modulo 11</strong>
+                </p>
+                <p>
+                    Observons ce que valent les puissances de 10 lorsqu'on les divise par 11 :
+                    <ul>
+                        <li>$10^0 = 1$ : reste $1$ quand on divise par 11.</li>
+                        <li>$10^1 = 10$ : reste $10$ (ou $-1$, car $10 - 11 = -1$) quand on divise par 11.</li>
+                        <li>$10^2 = 100$ : reste $1$ (car $100 = 9 \times 11 + 1$).</li>
+                        <li>$10^3 = 1000$ : reste $-1$ (car $1000 = 90 \times 11 + 10$, et $10$ est congru à $-1$).</li>
+                        <li>$10^4 = 10000$ : reste $1$ (car $10000 = 909 \times 11 + 1$).</li>
+                        <li>Et ainsi de suite : les puissances de 10 alternent entre $+1$ et $-1$ comme reste quand on divise par 11.</li>
+                    </ul>
+                </p>
+                <p>
+                    <strong>Étape 3 : Réécriture de $N$ en utilisant cette propriété</strong>
+                </p>
+                <p>
+                    En remplaçant chaque puissance de 10 par son reste modulo 11, on obtient :
+                    $$N = d_n \times (1 \text{ ou } -1) + d_{n-1} \times (-1 \text{ ou } 1) + \dots + d_1 \times (-1) + d_0 \times 1$$
+                    <strong>Autrement dit :</strong>
+                    $$N = d_0 - d_1 + d_2 - d_3 + d_4 - \dots + (-1)^n d_n$$
+                    Cette expression est appelée la <strong>somme alternée</strong> des chiffres de $N$ (en partant de la droite).
+                </p>
+                <p>
+                    <strong>Étape 4 : Exemple concret</strong>
+                </p>
+                <p>
+                    Prenons $N = 1254$. Sa décomposition est :
+                    $$1254 = 1 \times 10^3 + 2 \times 10^2 + 5 \times 10^1 + 4 \times 10^0$$
+                    En remplaçant les puissances de 10 par leurs restes modulo 11 :
+                    $$1254 = 1 \times (-1) + 2 \times 1 + 5 \times (-1) + 4 \times 1 = -1 + 2 - 5 + 4 = 0$$
+                    Comme le résultat est $0$, $1254$ est divisible par $11$.
+                </p>
+                <p>
+                    <strong>Étape 5 : Généralisation</strong>
+                </p>
+                <p>
+                    Pour tout nombre $N$, on peut écrire :
+                    $$N = (d_0 - d_1 + d_2 - d_3 + \dots) + \text{un multiple de 11}$$
+                    Cela signifie que $N$ est divisible par $11$ si et seulement si la somme alternée $(d_0 - d_1 + d_2 - d_3 + \dots)$ est divisible par $11$ (car le multiple de $11$ ne change pas la divisibilité).
+                </p>
+                <p>
+                    <strong>Conclusion :</strong>
+                    Un nombre est divisible par $11$ si et seulement si la somme alternée de ses chiffres (en partant de la droite) est divisible par $11$.
+                </p>
+                <p>
+                    <strong>Remarque :</strong>
+                    Si la somme alternée est négative, on peut prendre sa valeur absolue. Par exemple, pour $N = 121$, la somme alternée est $1 - 2 + 1 = 0$, donc $121$ est divisible par $11$.
+                </p>
+                <p>
+                    <strong>Illustration visuelle :</strong>
+                    Imagine que chaque chiffre de ton nombre est assis sur une balançoire :
+                    <ul>
+                        <li>Les chiffres en position <strong>paire</strong> (unités, centaines, etc.) sont du côté <strong>droit</strong> (ils ajoutent leur valeur).</li>
+                        <li>Les chiffres en position <strong>impaire</strong> (dizaines, milliers, etc.) sont du côté <strong>gauche</strong> (ils soustraient leur valeur).</li>
+                    </ul>
+                    Si la balançoire est <strong>équilibrée</strong> (la différence est $0$), ou si la différence est un multiple de $11$, alors le nombre est divisible par $11$.
+                </p>
+            </div>
+            <p id="rule-11-question"></p>
+            <button onclick="generateDivisibilityExample(11)" class="btn-generation">Générer un exemple</button>
+            <button onclick="toggleHelp(this, 'rule-11-sol', 'Voir l\'Exemple & Solution')" class="btn-solution help-button-action">Voir l'Exemple & Solution</button>
+            <div id="rule-11-sol" class="help-content help-solution"></div>
+        </div>
+        <div id="container-rule-13" class="divisibility-rule">
+            <h4>Divisibilité par 13 (Méthode de l'Addition)</h4>
+            <p>Un entier $N$ est divisible par <strong>$13$</strong> si et seulement si $N'$ est divisible par $13$, où $N'$ est obtenu en <strong>additionnant quatre fois le dernier chiffre</strong> au reste du nombre. (Répéter l'opération si $N'$ est grand).</p>
+            <p id="rule-13-question"></p>
+            <button onclick="generateDivisibilityExample(13)" class="btn-generation">Générer un exemple</button>
+            <button onclick="toggleHelp(this, 'rule-13-sol', 'Voir l\'Exemple & Solution')" class="btn-solution help-button-action">Voir l'Exemple & Solution</button>
+            <div id="rule-13-sol" class="help-content help-solution"></div>
+        </div>
+        <div id="container-rule-17" class="divisibility-rule">
+            <h4>Divisibilité par 17 (Méthode de la Soustraction)</h4>
+            <p>Un entier $N$ est divisible par <strong>$17$</strong> si et seulement si $N'$ est divisible par $17$, où $N'$ est obtenu en <strong>soustraiant cinq fois le dernier chiffre</strong> au reste du nombre. (Répéter l'opération si $N'$ est grand).</p>
+            <button onclick="toggleHelp(this, 'dem-rule-17', 'Démonstration détaillée (Justification de la méthode)')" class="cours-dem-button">Démonstration détaillée (Justification de la méthode)</button>
+            <div id="dem-rule-17" class="demonstration-content">
+                <p><strong>Justification de la méthode de simplification successive ($N' = R - 5u$) :</strong></p>
+                <p>L'objectif est de montrer que la divisibilité de $\mathbf{N}$ par 17 est équivalente à la divisibilité du nombre simplifié $\mathbf{N'} = \mathbf{R} - \mathbf{5u}$ par 17, où $N=10R+u$.</p>
+                <ol>
+                    <li><strong>Décomposition de $N$ :</strong>
+                        Tout nombre $N$ peut être écrit sous la forme :
+                        $$N = 10R + u$$
+                        où $R$ est la partie du nombre sans le dernier chiffre (le "reste") et $u$ est le dernier chiffre (l'unité).
+                        (Exemple: si $N=357$, $R=35$ et $u=7$.)
+                    </li>
+                    <li><strong>Lien entre $N$ et $N'$ :</strong>
+                        Nous montrons que si $N'$ est un multiple de 17, alors $N$ l'est aussi.
+                        Supposons que $N'$ est divisible par $17$, donc $N' = R - 5u = 17k$ (où $k$ est un entier).
+                        On en déduit que $R = 17k + 5u$.
+                    </li>
+                    <li><strong>Substitution dans $N$ :</strong>
+                        Substituons cette expression de $R$ dans la formule de $N$:
+                        $$N = 10R + u$$
+                        $$N = 10 \times (17k + 5u) + u$$
+                        $$N = (10 \times 17k) + (10 \times 5u) + u$$
+                        $$N = 170k + 50u + u$$
+                        $$N = 170k + 51u$$
+                    </li>
+                    <li><strong>Conclusion :</strong>
+                        Puisque $170 = 17 \times 10$ et $51 = 17 \times 3$, nous pouvons factoriser par 17 :
+                        $$N = 17 \times (10k) + 17 \times (3u)$$
+                        $$N = 17 \times (10k + 3u)$$
+                        Comme $10k + 3u$ est un entier, $N$ est un multiple de 17.
+                        <strong>La méthode fonctionne : $N$ est divisible par $17$ si $N'$ l'est.</strong>
+                    </li>
+                </ol>
+            </div>
+            <p id="rule-17-question"></p>
+            <button onclick="generateDivisibilityExample(17)" class="btn-generation">Générer un exemple</button>
+            <button onclick="toggleHelp(this, 'rule-17-sol', 'Voir l\'Exemple & Solution')" class="btn-solution help-button-action">Voir l'Exemple & Solution</button>
+            <div id="rule-17-sol" class="help-content help-solution"></div>
+        </div>
+        <div id="container-rule-19" class="divisibility-rule">
+            <h4>Divisibilité par 19 (Méthode de l'Addition)</h4>
+            <p>Un entier $N$ est divisible par <strong>$19$</strong> si et seulement si $N'$ est divisible par $19$, où $N'$ est obtenu en <strong>additionnant le double du dernier chiffre</strong> au reste du nombre. (Répéter l'opération si $N'$ est grand).</p>
+            <p id="rule-19-question"></p>
+            <button onclick="generateDivisibilityExample(19)" class="btn-generation">Générer un exemple</button>
+            <button onclick="toggleHelp(this, 'rule-19-sol', 'Voir l\'Exemple & Solution')" class="btn-solution help-button-action">Voir l'Exemple & Solution</button>
+            <div id="rule-19-sol" class="help-content help-solution"></div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialisation de l'Exercice 1 (Test de Primalité)
+            if (typeof generateNewPrimaliteProblem === 'function') {
+                generateNewPrimaliteProblem();
+            }
+            // Initialisation de l'Exercice 2 (Décomposition)
+            if (typeof generateNewFactorizationProblem === 'function') {
+                generateNewFactorizationProblem();
+            }
+            // Initialisation de l'Exercice 3 (Nombre de diviseurs)
+            if (typeof generateNewDivisorsProblem === 'function') {
+                generateNewDivisorsProblem();
+            }
+            // Initialisation des règles de divisibilité (cliquer une fois pour pré-charger les questions)
+            const divisors = [2, 3, 5, 7, 9, 11, 13, 17, 19];
+            divisors.forEach(d => {
+                if (typeof generateDivisibilityExample === 'function') {
+                    generateDivisibilityExample(d);
+                }
+            });
+            // Re-typeset initial pour les formules LaTeX statiques et les nouveaux exercices
+            if (window.MathJax) {
+                MathJax.typeset();
+            }
+        });
+    </script>
+</body>
+</html>
