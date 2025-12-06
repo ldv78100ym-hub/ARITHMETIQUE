@@ -135,6 +135,13 @@
     </style>
 </head>
 <body>
+	<a href="https://ldv78100ym-hub.github.io/HOME/" target="_blank" style="text-decoration: none;">
+            <button
+                style="padding: 10px 20px; font-size: 1em; cursor: pointer; border: none; border-radius: 5px; background-color: #5bc0de; color: white;">
+                Autres chapitres 📚
+            </button>
+        </a>
+
     <h1>S5 : Équations Diophantiennes Linéaires 📐</h1>
 
     <div class="section-box">
@@ -161,7 +168,7 @@
                     <ul>
                         <li>Les solutions générales sont données par :
                             $$x = x_0 + k b' \quad \text{et} \quad y = y_0 - k a', \quad k \in \mathbb{Z}$$
-                            où $a' = a/\text{PGCD}(a, b)$ et $b' = b/\text{PGCD}(a, b)$.
+                            où $a' = \dfrac{a}{\text{PGCD}(a, b)}$ et $b' = \dfrac{b}{\text{PGCD}(a, b)}$.
                     </ul>
                 </li>
             </ol>
@@ -170,7 +177,7 @@
 
     <h3 class="exercice-title">Exercice 1 : Application Directe de la Méthode (Dynamique)</h3>
     <div id="container-ex1" class="question-box">
-        <p id="ex1-question">Résoudre dans $\mathbb{Z}^2$ l'équation diophantienne : <span class="diophantine-eq" id="diophantine-equation">Chargement...</span></p>
+        <p id="ex1-question">Résoudre dans $\mathbb{Z}^2$ l'équation diophantienne : <span class="diophantinen-eq" id="diophantine-equation">Chargement...</span></p>
         
         <div class="help-buttons">
             <button onclick="toggleHelp(this, 'help-ex1-ind1', 'Indication')" class="btn-indication help-button-action" data-content-id="help-ex1-ind1">Indication</button>
@@ -191,7 +198,7 @@
     
     <h3 class="exercice-title">Exercice 2 : Équations sans Solution (Statique)</h3>
     <div id="container-ex2" class="question-box">
-        <p id="ex2-question">Montrer que l'équation <span id="ex2-equation" class="diophantine-eq">Chargement...</span> n'admet pas de solution dans $\mathbb{Z}^2$.</p>
+        <p id="ex2-question">Montrer que l'équation <span id="ex2-equation" class="diophantinen-eq">Chargement...</span> n'admet pas de solution dans $\mathbb{Z}^2$.</p>
         
         <div class="help-buttons">
             <button onclick="toggleHelp(this, 'help-ex2-sol1', 'Solution')" class="btn-solution help-button-action" data-content-id="help-ex2-sol1">Solution</button>
@@ -210,54 +217,63 @@
             </ol>
         
         <div class="help-buttons">
-            <button onclick="toggleHelp(this, 'help-ex3-ind1', 'Indication 1')" class="btn-indication help-button-action" data-content-id="help-ex3-ind1">Indication 1</button>
+            <button onclick="toggleHelp(this, 'help-ex3-ind1', 'Indication')" class="btn-indication help-button-action" data-content-id="help-ex3-ind1">Indication</button>
             <button onclick="toggleHelp(this, 'help-ex3-sol1', 'Solution (Détaillée)')" class="btn-solution help-button-action" data-content-id="help-ex3-sol1">Solution (Détaillée)</button>
             <button onclick="generateNewContrainedProblem()" class="btn-generation">Générer un nouvel exercice</button>
         </div>
         
         <div id="help-ex3-ind1" class="help-content help-indication">
-            <strong>Partie 1 & 2 :</strong> L'équation est de la forme $ax + by = c$. Calculez $d = \text{PGCD}(a, b)$. Vérifiez qu'il divise $c$.
-            <br>
-            <strong>Partie 3 :</strong> Une fois la solution générale trouvée (en fonction de $k$), utilisez les contraintes de positivité ($x \ge 0$ et $y \ge 0$) pour encadrer le paramètre $k$. Enfin, analysez l'expression de la somme $S=x+y$ en fonction de $k$ pour trouver la valeur optimale.
+            <p id="ex3-indication-content"><strong>Indication :</strong> L'équation est $ax + by = c$. La solution générale est $\mathcal{S} = \{(x_0 + k \cdot b', y_0 - k \cdot a') \mid k \in \mathbb{Z} \}$. Déterminez la plage de valeurs de $k$ pour que $x \geq 0$ et $y \geq 0$.</p>
         </div>
         <div id="help-ex3-sol1" class="help-content help-solution">
             <p id="ex3-solution-content">Solution détaillée (Calcul en cours...)</p>
         </div>
     </div>
 
+    <div style="text-align: center; margin-top: 50px;">
+        <button id="show-auteur-btn" onclick="toggleDisclaimer()" 
+            style="padding: 10px 20px; font-size: 1em; cursor: pointer; border: none; border-radius: 5px; background-color: #333; color: white;">
+            Auteur et Droits d'Auteur
+        </button>
+    </div>
+
+    <div id="disclaimer-content" style="margin-top: 20px; padding: 20px; border: 1px solid #ddd; border-radius: 5px; background-color: #fff; display: none;">
+        <h3>Droits d'Auteur et Source</h3>
+            <p><strong>Auteur du problème :</strong> Yann Merdy</p>
+            <p><strong>Droits d'Auteur et Utilisation :</strong></p>
+            <p>Ce contenu, y compris l'énoncé, les solutions et le code interactif, est protégé par les droits d'auteur. <strong>Toute utilisation à des fins commerciales, y compris la revente, la distribution ou l'intégration dans des produits commerciaux, est strictement interdite sans autorisation écrite explicite de l'auteur.</strong></p>
+    </div>
 
     <script>
-        // --- FONCTION DE GESTION DE L'AFFICHAGE DES AIDES ---
-        function toggleHelp(button, contentId, buttonText) {
-            const content = document.getElementById(contentId);
-            const isVisible = content.style.display === 'block';
-
-            // Masquer tout le contenu d'aide de l'exercice pour éviter les chevauchements
-            const parent = button.closest('.question-box');
-            if (parent) {
-                parent.querySelectorAll('.help-content').forEach(c => {
-                    if (c.id !== contentId) {
-                        c.style.display = 'none';
-                    }
-                });
-            }
-
+        // --- NOUVELLE FONCTION POUR DROITS D'AUTEUR (Identique à S1) ---
+        function toggleDisclaimer() {
+            const disclaimer = document.getElementById('disclaimer-content');
+            const button = document.getElementById('show-auteur-btn');
+            const isVisible = disclaimer.style.display === 'block';
 
             if (isVisible) {
-                content.style.display = 'none';
-                button.textContent = buttonText;
+                disclaimer.style.display = 'none';
+                button.textContent = 'Auteur et Droits d\'Auteur';
+                button.style.backgroundColor = '#333';
             } else {
-                // S'assurer que MathJax est lancé pour le contenu affiché dynamiquement
-                if (window.MathJax) {
-                    MathJax.typeset([content]);
-                }
-                content.style.display = 'block';
-                button.textContent = 'Masquer l\''+buttonText.toLowerCase().split(' ')[0];
+                disclaimer.style.display = 'block';
+                button.textContent = 'Masquer les Droits d\'Auteur';
+                button.style.backgroundColor = '#dc3545';
             }
         }
+        // --- Fin NOUVELLE FONCTION ---
         
-        // --- FONCTIONS UTILITAIRES MATHÉMATIQUES (PGCD et Euclide Étendu) ---
+        // --- FONCTIONS UTILITAIRES MATHÉMATIQUES (PGCD, Bézout & Fibonacci) ---
         
+        /**
+         * Génère un entier aléatoire entre min et max (inclus).
+         */
+        function getRandomInt(min, max) {
+            min = Math.ceil(min);
+            max = Math.floor(max);
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
         /**
          * Calcule le PGCD de deux nombres.
          */
@@ -271,7 +287,7 @@
         }
 
         /**
-         * Algorithme d'Euclide Étendu (donne le PGCD et les coefficients de Bézout)
+         * Algorithme d'Euclide Étendu (donne les coefficients de Bézout)
          * Renvoie { g: PGCD(a,b), u: coeff_a, v: coeff_b } tel que a*u + b*v = g
          */
         function extendedEuclidean(a, b) {
@@ -279,42 +295,67 @@
             let a_init = a, b_init = b;
             a = Math.abs(a);
             b = Math.abs(b);
-
             while (b) {
                 const q = Math.floor(a / b);
                 [a, b] = [b, a % b];
                 [u, u1] = [u1, u - q * u1];
                 [v, v1] = [v1, v - q * v1];
             }
-
             // Correction de signe si l'entrée était négative
             if (a_init < 0) u = -u;
             if (b_init < 0) v = -v;
-
             return { g: a, u: u, v: v };
+        }
+        
+        // Fonction générique pour afficher/masquer l'aide/solution
+        function toggleHelp(button, contentId, originalText) {
+            const content = document.getElementById(contentId);
+            const container = button.closest('.question-box');
+            
+            // Masquer tout contenu d'aide dans le même conteneur sauf celui qui est cliqué
+            container.querySelectorAll('.help-content').forEach(el => {
+                if (el.id !== contentId && el.style.display !== 'none') {
+                    el.style.display = 'none';
+                }
+            });
+            // Réinitialiser les boutons des autres aides (Indication / Solution)
+            container.querySelectorAll('.help-button-action').forEach(btn => {
+                if (btn !== button && btn.textContent !== btn.getAttribute('data-content-id').includes('sol') ? 'Solution' : 'Indication') {
+                    btn.textContent = btn.getAttribute('data-content-id').includes('sol') ? 'Solution (Complète)' : 'Indication';
+                    btn.style.backgroundColor = btn.classList.contains('btn-solution') ? '#33cc33' : '#ffcc00';
+                }
+            });
+
+            if (content.style.display === 'block') {
+                content.style.display = 'none';
+                button.textContent = originalText;
+                button.style.backgroundColor = button.classList.contains('btn-solution') ? '#33cc33' : '#ffcc00';
+            } else {
+                content.style.display = 'block';
+                button.textContent = `Masquer ${originalText}`;
+                button.style.backgroundColor = button.classList.contains('btn-solution') ? '#cc0000' : '#d1a400';
+            }
         }
 
         // --- EXERCICE 1 : Génération Dynamique d'une Équation Diophantienne ---
-
         function generateNewDiophantineProblem() {
-            // Choix de coefficients "a" et "b" (entre 10 et 50)
+            // 1. Générer a et b premiers entre eux pour simplifier ou non
             let a, b, d;
-            // Garantir PGCD > 1
             do {
-                a = Math.floor(Math.random() * 41) + 10; 
-                b = Math.floor(Math.random() * 41) + 10;
+                a = getRandomInt(10, 40);
+                b = getRandomInt(10, 40);
                 d = gcd(a, b);
-            } while (d === 1); 
-
-            // Choix de 'c' qui doit être un multiple de d
-            const k_c = Math.floor(Math.random() * 5) + 2; // k_c entre 2 et 6
+            } while (d > 5 || a === b || a % b === 0 || b % a === 0); 
+            
+            // 2. Générer c, multiple de d
+            const k_c = getRandomInt(5, 30) * (Math.random() < 0.5 ? 1 : -1);
             const c = d * k_c;
 
-            // 1. Affichage de l'équation
-            const equationText = `${a}x + ${b}y = ${c}`;
+            // 3. Afficher l'équation
+            const equationText = `\\(${a}x + ${b}y = ${c}\\)`;
             document.getElementById('diophantine-equation').textContent = equationText;
-
-            // 2. Calcul de la solution complète
+            
+            // 4. Calculer la solution détaillée
             const euclideResult = extendedEuclidean(a, b);
             const u = euclideResult.u;
             const v = euclideResult.v;
@@ -327,84 +368,81 @@
             const a_prime = a / d;
             const b_prime = b / d;
 
-            const solContent = `
-                <p><strong>1. Vérification de la condition d'existence :</strong></p>
-                <p>On calcule $\\text{PGCD}(${a}, ${b}) = ${d}$.</p>
-                <p>Puisque ${c} est un multiple de ${d}$, l'équation admet des solutions entières. En effet :</p>
-                $$${c} = ${d} \\times ${k_c}$$
-                
-                <p><strong>2. Solution particulière $(x_0, y_0)$ :</strong></p>
-                <p>L'algorithme d'Euclide étendu donne la relation de Bézout : $${a}(${u}) + ${b}(${v}) = ${d}$$.</p>
-                <p>On multiplie cette égalité par $k_c = ${k_c}$ :</p>
-                $$${a}(${x0}) + ${b}(${y0}) = ${c}$$
-                <p>Une solution particulière est donc $x_0 = ${x0}$ et $y_0 = ${y0}$.</p>
-
+            let solContent = `
+                <h3>Correction Détaillée : Cas Résoluble (L'équation : ${a}x + ${b}y = ${c})</h3>
+                <p><strong>1. Vérification de l'Existence :</strong></p>
+                <ul>
+                    <li>On calcule le Plus Grand Commun Diviseur (PGCD) : $\\text{PGCD}(${a}, ${b}) = \\mathbf{${d}}$.</li>
+                    <li>On vérifie si ce PGCD divise $${c}$ : $${c} = ${d} \\times (${k_c})$. Oui, la condition est remplie.</li>
+                </ul>
+                <p><strong>2. Solution Particulière $(x_0, y_0)$ :</strong></p>
+                <ul>
+                    <li>L'algorithme d'Euclide étendu donne la relation de Bézout pour le PGCD : $${a}(${u}) + ${b}(${v}) = ${d}$$.</li>
+                    <li>En multipliant par $k_c = ${k_c}$, on obtient la solution particulière : $${a}(${x0}) + ${b}(${y0}) = ${c}$$.</li>
+                </ul>
+                <p>Une solution particulière est $\\mathbf{x_0 = ${x0}}$ et $y_0 = ${y0}$.</p>
                 <p><strong>3. Solution générale :</strong></p>
                 <p>Les solutions $(x, y)$ vérifient $x = x_0 + k \\dfrac{b}{d}$ et $y = y_0 - k \\dfrac{a}{d}$.</p>
                 <p>Avec $b/d = ${b_prime}$ et $a/d = ${a_prime}$, l'ensemble des solutions est :</p>
                 $$\\mathcal{S} = \\{(${x0} + k \\cdot ${b_prime}, ${y0} - k \\cdot ${a_prime}) \\mid k \\in \\mathbb{Z} \\}$$
             `;
             document.getElementById('ex1-solution-content').innerHTML = solContent;
+            
+            // Masquer l'aide et réinitialiser le bouton lors de la génération
+            document.getElementById('help-ex1-ind1').style.display = 'none';
+            document.getElementById('help-ex1-sol1').style.display = 'none';
+            document.querySelector('#container-ex1 [data-content-id="help-ex1-ind1"]').textContent = 'Indication';
+            document.querySelector('#container-ex1 [data-content-id="help-ex1-ind1"]').style.backgroundColor = '#ffcc00';
+            document.querySelector('#container-ex1 [data-content-id="help-ex1-sol1"]').textContent = 'Solution (Complète)';
+            document.querySelector('#container-ex1 [data-content-id="help-ex1-sol1"]').style.backgroundColor = '#33cc33';
 
             // Re-typeset de l'équation et de la solution
             if (window.MathJax) {
                 MathJax.typeset([document.getElementById('diophantine-equation').parentNode, document.getElementById('ex1-solution-content')]);
             }
         }
-        
+
         // --- EXERCICE 2 : Génération Dynamique d'une Équation sans solution ---
         function generateNonSolvableProblem() {
             let a, b, d, c, r;
-
-            // 1. Générer a et b pour garantir PGCD(a, b) = d > 1
+            // 1. Générer a et b pour garantir PGCD(a,b) > 1
             do {
-                a = Math.floor(Math.random() * 31) + 10; // 10 à 40
-                b = Math.floor(Math.random() * 31) + 10; // 10 à 40
+                a = getRandomInt(10, 40);
+                b = getRandomInt(10, 40);
                 d = gcd(a, b);
-            } while (d <= 1 || a === b);
-
-            // 2. Générer c tel que c n'est PAS un multiple de d (c = d*k + r, avec 0 < r < d)
-            const k_c = Math.floor(Math.random() * 10) + 5; // Facteur pour c
-            r = Math.floor(Math.random() * (d - 1)) + 1; // Reste r (1 à d-1)
+            } while (d === 1 || a === b || a % b === 0 || b % a === 0); 
+            
+            // 2. Générer c non multiple de d
+            const k_c = getRandomInt(5, 30) * (Math.random() < 0.5 ? 1 : -1);
+            
+            // Pour garantir que c ne soit pas divisible par d, on ajoute un reste r non nul
+            // On veut c = d*k_c + r, avec 0 < r < d
+            r = getRandomInt(1, d - 1);
             c = d * k_c + r;
 
-            // 3. Mise à jour de l'énoncé
+            // 3. Afficher l'équation
             const equationText = `${a}x + ${b}y = ${c}`;
             document.getElementById('ex2-equation').textContent = equationText;
 
-            // 4. Construction de la solution détaillée (en utilisant la même logique que l'ancien Ex2)
-            
-            // Calculer les étapes de l'algorithme d'Euclide pour l'affichage pédagogique
-            let euclideSteps = [];
-            let current_a = Math.abs(a);
-            let current_b = Math.abs(b);
-            while (current_b) {
-                const q = Math.floor(current_a / current_b);
-                const remainder = current_a % current_b;
-                euclideSteps.push(`$$${current_a} = ${q} \\cdot ${current_b} + ${remainder}$$`);
-                current_a = current_b;
-                current_b = remainder;
-            }
-            // Le dernier a est le PGCD(a,b)
-            const pgcd_display = euclideSteps.join('\n');
-
-
-            const solContent = `
-                <p>L'équation est $${a}x + ${b}y = ${c}$.</p>
-                <p>Pour qu'elle admette des solutions entières, il faut que $\\text{PGCD}(${a}, ${b})$ divise $${c}$.</p>
-                <p>On calcule $d = \\text{PGCD}(${a}, ${b})$ à l'aide de l'algorithme d'Euclide :</p>
-                ${pgcd_display}
-                <p>Donc $\\text{PGCD}(${a}, ${b}) = \\mathbf{${d}}$.</p>
-                <p>La condition d'existence exige que $d$ divise le second membre $c=${c}$. Or, en divisant $${c}$ par $d=${d}$, on trouve :</p>
+            // 4. Calculer la solution détaillée
+            let solContent = `
+                <h3>Correction Détaillée : Cas Non Résoluble (L'équation : ${a}x + ${b}y = ${c})</h3>
+                <p><strong>1. Modélisation :</strong></p>
+                <p>L'équation est : $${a}x + ${b}y = ${c}$</p>
+                <p><strong>2. Condition d'Existence des solutions :</strong></p>
+                <p>L'équation admet des solutions dans $\\mathbb{Z}^2$ si et seulement si $\\text{PGCD}(a, b)$ divise $c$.</p>
+                <p>On calcule $\\text{PGCD}(${a}, ${b}) = \\mathbf{${d}}$.</p>
+                <p>On effectue la division euclidienne de $c$ par $d$ :</p>
                 $$${c} = ${k_c} \\times ${d} + ${r}$$
                 <p>Le reste $\\mathbf{${r}}$ est non nul.</p>
                 <p>Par conséquent, $\\text{PGCD}(${a}, ${b}) = ${d}$ ne divise pas $${c}$. L'équation $\\mathbf{${a}x + ${b}y = ${c}}$ n'admet <strong>aucune</strong> solution dans $\\mathbb{Z}^2$.</p>
             `;
             document.getElementById('ex2-solution-content').innerHTML = solContent;
-
+            
             // 5. Masquer l'aide et réinitialiser le bouton lors de la génération (pour éviter les chevauchements)
             document.getElementById('help-ex2-sol1').style.display = 'none';
             document.querySelector('#container-ex2 [data-content-id="help-ex2-sol1"]').textContent = 'Solution';
+            document.querySelector('#container-ex2 [data-content-id="help-ex2-sol1"]').style.backgroundColor = '#33cc33';
 
             // 6. Assure le rendu MathJax
             if (window.MathJax) {
@@ -412,248 +450,170 @@
             }
         }
 
-        // --- EXERCICE 3 : Génération Dynamique d'un Problème avec Contraintes ---
+        // --- EXERCICE 3 : Génération Dynamique d'un Problème avec Contraintes (CORRIGÉ) ---
         function generateNewContrainedProblem() {
-            let a, b, d, c, existsSolutionInZ;
+            let a, b, c, d;
 
-            // 1. Génération de a et b (poids) avec PGCD(d) > 1 (Poids entre 5 et 20)
+            // 1. Générer a et b (PGCD > 1) et c (multiple du PGCD) pour garantir des solutions
             do {
-                a = Math.floor(Math.random() * 16) + 5; 
-                b = Math.floor(Math.random() * 16) + 5;
+                a = getRandomInt(5, 15);
+                b = getRandomInt(5, 15);
                 d = gcd(a, b);
-            } while (d <= 1 || a === b); // Garantir d > 1 et a != b
-
-            // 2. Détermination de l'existence de solution dans Z (70% de chance)
-            existsSolutionInZ = Math.random() < 0.7; 
-
-            // 3. Génération de c (masse totale)
-            const c_multiplier = Math.floor(Math.random() * 20) + 15; // Multiplicateur pour avoir une masse totale significative
+            } while (d === 1 || a === b || a % b === 0 || b % a === 0); 
             
-            if (existsSolutionInZ) {
-                // Cas 1 : La solution existe dans Z (c est un multiple de d)
-                c = d * c_multiplier;
-            } else {
-                // Cas 2 : Pas de solution dans Z (c n'est PAS un multiple de d)
-                const r = Math.floor(Math.random() * (d - 1)) + 1; // Reste r (1 à d-1)
-                c = d * c_multiplier + r; 
-            }
+            // Assurer que la solution non nulle est réaliste (c assez grand)
+            const k_c = getRandomInt(10, 30);
+            c = d * k_c; 
 
-            // 4. Mise à jour du texte de l'exercice
-            document.getElementById('ex3-weight').textContent = `${c} kg`;
-            document.getElementById('ex3-sacA').textContent = `${a} kg`;
-            document.getElementById('ex3-sacB').textContent = `${b} kg`;
+            // 2. Afficher la question
+            document.getElementById('ex3-weight').textContent = c;
+            document.getElementById('ex3-sacA').textContent = a;
+            document.getElementById('ex3-sacB').textContent = b;
+
+            let questionListHTML = `
+                <li><strong>Modélisation :</strong> Écrire l'équation diophantienne linéaire modélisant le problème, où $x$ est le nombre de sacs de ${a} kg et $y$ est le nombre de sacs de ${b} kg.</li>
+                <li><strong>Résolution générale :</strong> Déterminer l'ensemble des solutions entières $(x, y)$ de cette équation.</li>
+                <li><strong>Contraintes :</strong> Déterminer l'ensemble des solutions positives ou nulles (c'est-à-dire avec $x \\geq 0$ et $y \\geq 0$)</li>
+                <li><strong>Minimisation :</strong> Si l'équation a des solutions positives, trouver le nombre <strong>minimum total de sacs</strong> que le marchand doit utiliser, en tenant compte des contraintes $x \\geq 0$ et $y \\geq 0$.</li>
+            `;
+
+            // Solution Calculation
+            const euclideResult = extendedEuclidean(a, b);
+            const u = euclideResult.u;
+            const v = euclideResult.v;
+            const k_c_calc = c / d; // Should be an integer
+
+            // Particular solution (x0, y0)
+            const x0 = u * k_c_calc;
+            const y0 = v * k_c_calc;
+
+            // General solution parameters (a'=a/d, b'=b/d)
+            const a_prime = a / d;
+            const b_prime = b / d;
+
+            // Constraint calculations (x >= 0 and y >= 0)
+            // x = x0 + k * b' >= 0  =>  k * b' >= -x0  => k >= -x0 / b'
+            const k_min_float = -x0 / b_prime;
+            // y = y0 - k * a' >= 0  =>  -k * a' >= -y0  => k * a' <= y0  => k <= y0 / a'
+            const k_max_float = y0 / a_prime;
+
+            const k_min_int = Math.ceil(k_min_float);
+            const k_max_int = Math.floor(k_max_float);
+
+            // Minimization S = x + y = (x0 + y0) + k*(b' - a')
+            let S_fixed = x0 + y0;
+            let S_k_coeff = b_prime - a_prime;
+            let k_optimal, S_min;
+            let x_min, y_min;
+            let finalAnswerBox = '';
+            let newIndicationContent = '';
             
-            let solContent = '';
-            let questionListHTML = '';
-            
-            // Masquer l'aide et réinitialiser le bouton lors de la génération (pour éviter les chevauchements)
-            document.getElementById('help-ex3-sol1').style.display = 'none';
-            document.querySelector('[data-content-id="help-ex3-sol1"]').textContent = 'Solution (Détaillée)';
-            document.getElementById('help-ex3-ind1').style.display = 'none';
-            document.querySelector('[data-content-id="help-ex3-ind1"]').textContent = 'Indication 1';
-            
-            if (existsSolutionInZ) {
-                // --- CASE 1: SOLUTION EXISTE DANS Z ---
-                
-                // Liste de questions pour le cas résoluble
-                questionListHTML = `
-                    <li>Modéliser le problème par une équation diophantienne linéaire.</li>
-                    <li>Déterminer l'ensemble des solutions entières $(x, y)$ de l'équation.</li>
-                    <li>Déterminer le <strong>nombre minimum total de sacs</strong> que le marchand doit utiliser, en tenant compte des contraintes $x \\geq 0$ et $y \\geq 0$.</li>
-                `;
-
-                // Solution Calculation
-                const euclideResult = extendedEuclidean(a, b);
-                const u = euclideResult.u;
-                const v = euclideResult.v;
-                const k_c = c / d; 
-
-                // Particular solution (x0, y0)
-                const x0 = u * k_c;
-                const y0 = v * k_c;
-                
-                // General solution parameters (a'=a/d, b'=b/d)
-                const a_prime = a / d;
-                const b_prime = b / d;
-                
-                // Constraint calculations (x >= 0 and y >= 0)
-                const k_min_float = -x0 / b_prime;
-                const k_max_float = y0 / a_prime;
-
-                const k_min_int = Math.ceil(k_min_float);
-                const k_max_int = Math.floor(k_max_float);
-                
-                // Minimization S = x + y = (x0 + y0) + k*(b' - a')
-                let S_fixed = x0 + y0;
-                let S_k_coeff = b_prime - a_prime;
-
-                let k_optimal, S_min;
-                let x_min, y_min;
-                let finalAnswerBox = ''; // Conteneur pour la réponse finale stylisée
-
+            // Check if positive solutions exist
+            if (c % d === 0) { // Solvable Case
                 if (k_min_int > k_max_int) {
-                    // AUCUNE SOLUTION DANS N^2
-                    k_optimal = "\\text{Aucun entier}";
-                    S_min = "\\text{Aucune solution positive}";
-                    
-                    // Notation demandée par l'utilisateur pour l'intervalle vide
-                    const k_set_notation = `k \\in ]-\\infty;${k_max_float.toFixed(2)}]\cap[${k_min_float.toFixed(2)};+\\infty[`;
-
-                    finalAnswerBox = `
-                        <div class="final-answer-box failure">
-                            <strong>RÉPONSE FINALE :</strong><br>
-                            Il n'existe <strong>aucune combinaison entière positive</strong> de sacs ($${a}x + ${b}y = ${c}$) car l'ensemble des valeurs entières de $k$ valides est $\\mathbf{\\emptyset}$. Les contraintes imposent $${k_set_notation}$$.
-                        </div>
-                    `;
+                    // No positive solution exists (should be rare with the current parameter generation)
+                    S_min = 'N/A';
+                    x_min = 'N/A';
+                    y_min = 'N/A';
+                    finalAnswerBox = `<div class="final-answer-box failure">
+                        <p><strong>Conclusion :</strong> Il n'existe aucune combinaison de sacs $(x \geq 0, y \geq 0)$ pour transporter ${c} kg.</p>
+                    </div>`;
                 } else {
-                    // IL Y A DES SOLUTIONS DANS N^2
+                    // Positive solutions exist, find k_optimal for S_min
+                    
                     if (S_k_coeff > 0) {
-                        // S est croissant avec k. Minimiser k.
+                        // S(k) is increasing, so min S is at min k
                         k_optimal = k_min_int;
                     } else if (S_k_coeff < 0) {
-                        // S est décroissant avec k. Maximiser k.
+                        // S(k) is decreasing, so min S is at max k
                         k_optimal = k_max_int;
                     } else {
-                        // S est constant.
+                        // S(k) is constant (b' = a'), any k works
                         k_optimal = k_min_int; 
                     }
+                    
                     S_min = S_fixed + k_optimal * S_k_coeff;
-                    x_min = x0 + k_optimal * b_prime; 
+                    x_min = x0 + k_optimal * b_prime;
                     y_min = y0 - k_optimal * a_prime;
-
-                    finalAnswerBox = `
-                        <div class="final-answer-box success">
-                            <strong>RÉPONSE FINALE :</strong><br>
-                            Le nombre minimum de sacs est $S_{min} = \\mathbf{${S_min}}$.<br>
-                            Ceci est obtenu avec $\\mathbf{x = ${x_min}}$ sacs de ${a} kg et $\\mathbf{y = ${y_min}}$ sacs de ${b} kg (pour $k_{opt} = ${k_optimal}$).
-                        </div>
-                    `;
+                    
+                    finalAnswerBox = `<div class="final-answer-box success">
+                        <p><strong>Réponse Finale (Nombre minimum de sacs) :</strong></p>
+                        <p>Le nombre minimum de sacs est $\\mathbf{S_{min} = ${S_min}}$.</p>
+                        <p>Cela correspond à une combinaison de $\\mathbf{x = ${x_min}}$ sacs de \\(${a}\\) kg et $\\mathbf{y = ${y_min}}$ sacs de \\(${b} kg\\).</p>
+                    </div>`;
                 }
 
                 // Construction de la solution détaillée (Pédagogique)
                 solContent = `
-                    <h3>Correction Détaillée : Cas Résoluble dans $\\mathbb{Z}$ (L'équation : $${a}x + ${b}y = ${c}$)</h3>
-
-                    <p><strong>1. Vérification de l'Existence :</strong></p>
+                    <h3>Correction Détaillée : Problème à Contraintes (L'équation : $${a}x + ${b}y = ${c}$)</h3>
+                    <p><strong>1. Modélisation et Résolution Générale :</strong></p>
                     <ul>
-                        <li>On calcule le Plus Grand Commun Diviseur (PGCD) des poids : $\\text{PGCD}(${a}, ${b}) = \\mathbf{${d}}$.</li>
-                        <li>On vérifie si ce PGCD divise la masse totale $${c}$ : $\\text{PGCD}(${a}, ${b})= ${d}$ divise $${c}$ (car $${c} = ${d} \\times ${k_c}$).</li>
-                        <li>\\(\\longrightarrow\\) <strong>Conclusion :</strong> L'équation admet des solutions dans $\\mathbb{Z}$.</li>
+                        <li>L'équation est : $${a}x + ${b}y = ${c}$.</li>
+                        <li>$\text{PGCD}(${a}, ${b}) = \\mathbf{${d}}$. $${c} / ${d} = ${k_c_calc}$. L'équation a des solutions.</li>
+                        <li>Solution particulière : $\\mathbf{x_0 = ${x0}}$, $\\mathbf{y_0 = ${y0}}$ (via Bézout : $${a}(${u}) + ${b}(${v}) = ${d}$ et multiplication par ${k_c_calc}$).</li>
+                        <li>Solution générale : $$\\mathcal{S} = \\{(${x0} + k \\cdot ${b_prime}, ${y0} - k \\cdot ${a_prime}) \\mid k \\in \\mathbb{Z} \\}$$</li>
                     </ul>
 
-                    <p><strong>2. Solution Particulière $(x_0, y_0)$ :</strong></p>
-                    <ul>
-                        <li>L'algorithme d'Euclide étendu donne la relation de Bézout pour le PGCD : $${a}(${u}) + ${b}(${v}) = ${d}$$</li>
-                        <li>On multiplie par ${k_c}$ : $${a}(${x0}) + ${b}(${y0}) = ${c}$$</li>
-                        <li>Une solution particulière est $\\mathbf{x_0 = ${x0}}$ et $\\mathbf{y_0 = ${y0}}$.</li>
-                    </ul>
+                    <p><strong>2. Contraintes (Solutions Positives) :</strong></p>
+                    <p>Nous cherchons $k \in \mathbb{Z}$ tel que $x \geq 0$ et $y \geq 0$.</p>
+                    $$x \\geq 0 \\implies ${x0} + k \\cdot ${b_prime} \\geq 0 \\implies k \\geq \\mathbf{${k_min_float.toFixed(2)}}$$
+                    $$y \\geq 0 \\implies ${y0} - k \\cdot ${a_prime} \\geq 0 \\implies k \\leq \\mathbf{${k_max_float.toFixed(2)}}$$
+                    <p>Puisque $k$ doit être un entier, l'intervalle des valeurs possibles pour $k$ est $\\mathbf{[${k_min_int}, ${k_max_int}]}$.</p>
                     
-                    <p><strong>3. Solution Générale :</strong></p>
-                    <ul>
-                        <li>Coefficients simplifiés : $a' = ${a}/${d} = \\mathbf{${a_prime}}$ et $b' = ${b}/${d} = \\mathbf{${b_prime}}$.</li>
-                        <li>L'ensemble des solutions est :
-                            $$\\mathcal{S} = \\left\\{ (\\mathbf{${x0} + k \\cdot ${b_prime}}, \\mathbf{${y0} - k \\cdot ${a_prime}}) \\mid k \\in \\mathbb{Z} \\right\\}$$
-                        </li>
-                    </ul>
-
-                    <p><strong>4. Contraintes de Positivité :</strong></p>
-                    <p>On impose $\\mathbf{x \\geq 0}$ et $\\mathbf{y \\geq 0}$.</p>
-                    <ul>
-                        <li>$x \\geq 0 \\implies k \\geq ${k_min_float.toFixed(2)}$, soit $\\mathbf{k \\geq ${k_min_int}}$.</li>
-                        <li>$y \\geq 0 \\implies k \\leq ${k_max_float.toFixed(2)}$, soit $\\mathbf{k \\leq ${k_max_int}}$.</li>
-                    </ul>
-                    <p>L'ensemble des valeurs entières de $k$ valides est : $k \\in \\left[${k_min_int}, ${k_max_int}\\right]$.</p>
-
-                    <p><strong>5. Minimisation de la Somme $S = x + y$ :</strong></p>
-                    <p>On exprime la somme totale de sacs $S$ en fonction du paramètre $k$ en sommant les expressions de $x$ et $y$ :</p>
-                    $$S = x+y = (${x0} + k \\cdot ${b_prime}) + (${y0} - k \\cdot ${a_prime})$$
-                    $$S = (${x0} + ${y0}) + k \\cdot (${b_prime} - ${a_prime}) = \\mathbf{${S_fixed} + k \\cdot (${S_k_coeff})}$$
-                    
-                    ${k_min_int > k_max_int ? 
-                        // MODIFICATION APPLIQUÉE ICI
-                        `<p>Comme $\\mathbf{${k_min_float.toFixed(2)} > ${k_max_float.toFixed(2)}}$, les deux contraintes sont <strong>contradictoires</strong>.</p>
-                         <p>L'ensemble des valeurs entières de $k$ est $\\mathbf{\\emptyset}$ puisque l'on doit avoir $\\mathcal{S}_k = ]-\\infty;${k_max_float.toFixed(2)}]\cap[${k_min_float.toFixed(2)};+\\infty[$ (intersection vide).</p>
-                         <p>Le problème est $\\mathbf{impossible}$ dans $\\mathbb{N}^2$.</p>` 
-                        : 
-                        (S_k_coeff > 0 ? 
-                            `<p>Le coefficient de $k$ est $${S_k_coeff} = b' - a' = ${b_prime} - ${a_prime}$. Il est $\\mathbf{positif}$ ($>0$).</p>
-                             <p>La fonction $S(k)$ est donc <strong>strictement croissante</strong> sur l'intervalle d'existence.</p>
-                             <p>Pour trouver la valeur <strong>minimale</strong> de $S$, nous devons choisir la valeur <strong>minimale</strong> possible de $k$ dans l'intervalle $\\left[${k_min_int}, ${k_max_int}\\right]$.</p>
-                             <p>Nous choisissons : $\\mathbf{k_{opt} = k_{min} = ${k_min_int}}$.</p>
-                             <p>En substituant $\\mathbf{k_{opt}}$ dans $S(k)$, on obtient : $S_{min} = ${S_fixed} + (${k_min_int}) \\cdot (${S_k_coeff}) = \\mathbf{${S_min}}$.</p>
-                             <p>Les valeurs de sacs correspondantes sont :</p>
-                             $$\\begin{cases} x = ${x0} + (${k_min_int}) \\cdot (${b_prime}) = \\mathbf{${x_min}} \\text{ sacs de } ${a} \\text{ kg} \\\\ y = ${y0} - (${k_min_int}) \\cdot (${a_prime}) = \\mathbf{${y_min}} \\text{ sacs de } ${b} \\text{ kg} \\end{cases}$$`
-                            : 
-                            (S_k_coeff < 0 ? 
-                                `<p>Le coefficient de $k$ est $${S_k_coeff} = b' - a' = ${b_prime} - ${a_prime}$. Il est $\\mathbf{négatif}$ ($<0$).</p>
-                                 <p>La fonction $S(k)$ est donc <strong>strictement décroissante</strong> sur l'intervalle d'existence.</p>
-                                 <p>Pour trouver la valeur <strong>minimale</strong> de $S$, nous devons choisir la valeur <strong>maximale</strong> possible de $k$ dans l'intervalle $\\left[${k_min_int}, ${k_max_int}\\right]$.</p>
-                                 <p>Nous choisissons : $\\mathbf{k_{opt} = k_{max} = ${k_max_int}}$.</p>
-                                 <p>En substituant $\\mathbf{k_{opt}}$ dans $S(k)$, on obtient : $S_{min} = ${S_fixed} + (${k_max_int}) \\cdot (${S_k_coeff}) = \\mathbf{${S_min}}$.</p>
-                                 <p>Les valeurs de sacs correspondantes sont :</p>
-                                 $$\\begin{cases} x = ${x0} + (${k_max_int}) \\cdot (${b_prime}) = \\mathbf{${x_min}} \\text{ sacs de } ${a} \\text{ kg} \\\\ y = ${y0} - (${k_max_int}) \\cdot (${a_prime}) = \\mathbf{${y_min}} \\text{ sacs de } ${b} \\text{ kg} \\end{cases}$$`
-                                : 
-                                `<p>Le coefficient de $k$ est $\\mathbf{0}$ ($b' - a' = 0$).</p>
-                                 <p>La somme $S$ est $\\mathbf{constante}$ ($S = ${S_fixed}$) pour toutes les valeurs de $k$ valides ($k \\in \\left[${k_min_int}, ${k_max_int}\\right]$).</p>
-                                 <p>Nous choisissons $\\mathbf{k_{opt} = k_{min} = ${k_min_int}}$ par convention, mais tout $k$ dans l'intervalle donne la même somme minimale.</p>
-                                 <p>D'où, $S_{min} = \\mathbf{${S_min}}$.</p>
-                                 <p>Les valeurs de sacs correspondantes sont :</p>
-                                 $$\\begin{cases} x = ${x0} + (${k_min_int}) \\cdot (${b_prime}) = \\mathbf{${x_min}} \\text{ sacs de } ${a} \\text{ kg} \\\\ y = ${y0} - (${k_min_int}) \\cdot (${a_prime}) = \\mathbf{${y_min}} \\text{ sacs de } ${b} \\text{ kg} \\end{cases}$$`
-                            )
-                        )
-                    }
+                    <p><strong>3. Minimisation du nombre de sacs $S = x + y$ :</strong></p>
+                    <p>La somme de sacs est $S = (x_0 + y_0) + k(b' - a') = \\mathbf{${S_fixed} + k \\cdot (${S_k_coeff})}$$.</p>
+                    ${S_k_coeff > 0 ? `<p>Puisque le coefficient de $k$ est positif ($${S_k_coeff}$), $S(k)$ est croissante. La valeur minimale de $S$ est atteinte pour la valeur minimale de $k$ dans l'intervalle.</p> <p>Nous choisissons : $\\mathbf{k_{opt} = k_{min} = ${k_min_int}}$.</p> <p>En substituant $\\mathbf{k_{opt}}$ dans $S(k)$, on obtient : $S_{min} = ${S_fixed} + (${k_min_int}) \\cdot (${S_k_coeff}) = \\mathbf{${S_min}}$.</p> <p>Les valeurs de sacs correspondantes sont :</p> $$\\begin{cases} x = ${x0} + (${k_min_int}) \\cdot (${b_prime}) = \\mathbf{${x_min}} \\text{ sacs de } ${a} \\text{ kg} \\\\ y = ${y0} - (${k_min_int}) \\cdot (${a_prime}) = \\mathbf{${y_min}} \\text{ sacs de } ${b} \\text{ kg} \\end{cases}$$` : (S_k_coeff < 0 ? `<p>Puisque le coefficient de $k$ est négatif ($${S_k_coeff}$), $S(k)$ est décroissante. La valeur minimale de $S$ est atteinte pour la valeur maximale de $k$ dans l'intervalle.</p> <p>Nous choisissons : $\\mathbf{k_{opt} = k_{max} = ${k_max_int}}$.</p> <p>En substituant $\\mathbf{k_{opt}}$ dans $S(k)$, on obtient : $S_{min} = ${S_fixed} + (${k_max_int}) \\cdot (${S_k_coeff}) = \\mathbf{${S_min}}$.</p> <p>Les valeurs de sacs correspondantes sont :</p> $$\\begin{cases} x = ${x0} + (${k_max_int}) \\cdot (${b_prime}) = \\mathbf{${x_min}} \\text{ sacs de } ${a} \\text{ kg} \\\\ y = ${y0} - (${k_max_int}) \\cdot (${a_prime}) = \\mathbf{${y_min}} \\text{ sacs de } ${b} \\text{ kg} \\end{cases}$$` : `<p>Puisque le coefficient de $k$ est nul ($b' = a'$), la somme $S = x+y$ est constante, égale à $\\mathbf{${S_fixed}}$.</p> <p>Nous choisissons la plus petite valeur de $k$ possible : $\\mathbf{k_{opt} = k_{min} = ${k_min_int}}$.</p> <p>Les valeurs de sacs correspondantes sont :</p> $$\\begin{cases} x = ${x0} + (${k_min_int}) \\cdot (${b_prime}) = \\mathbf{${x_min}} \\text{ sacs de } ${a} \\text{ kg} \\\\ y = ${y0} - (${k_min_int}) \\cdot (${a_prime}) = \\mathbf{${y_min}} \\text{ sacs de } ${b} \\text{ kg} \\end{cases}$$`)}
                     
                     ${finalAnswerBox}
                 `;
 
-            } else {
-                // --- CASE 2: PAS DE SOLUTION DANS Z ---
-                
-                const r = c % d; 
-                const quotient = Math.floor(c / d);
-                
-                // Liste de questions pour le cas non résoluble
+                // Correction : Le contenu de l'indication est mis à jour séparément.
+                newIndicationContent = `<p id="ex3-indication-content"><strong>Indication :</strong> L'équation est $${a}x + ${b}y = ${c}$. La solution générale est $\\mathcal{S} = \\{(${x0} + k \\cdot ${b_prime}, ${y0} - k \\cdot ${a_prime}) \\mid k \\in \\mathbb{Z} \\}$. Déterminez la plage de valeurs de $k$ pour que $x \\geq 0$ et $y \\geq 0$.</p>`;
+            
+            } else { // Non solvable case
                 questionListHTML = `
-                    <li>Modéliser le problème par une équation diophantienne linéaire.</li>
-                    <li>Déterminer $\\text{PGCD}(${a}, ${b})$. En déduire si l'équation admet des solutions.</li>
-                    <li>Si l'équation n'admet pas de solution, expliquer pourquoi le marchand ne peut pas transporter cette masse exacte.</li>
+                    <li><strong>Modélisation :</strong> Écrire l'équation diophantienne linéaire modélisant le problème, où $x$ est le nombre de sacs de ${a} kg et $y$ est le nombre de sacs de ${b} kg.</li>
+                    <li><strong>Vérification :</strong> Prouver que l'équation n'admet pas de solution.</li>
                 `;
-
-                // Construction de la solution détaillée (Pédagogique)
-                solContent = `
-                    <h3>Correction Détaillée : Cas Non Résoluble (L'équation : $${a}x + ${b}y = ${c}$)</h3>
-                    
+                 solContent = `
+                    <h3>Correction Détaillée : Cas Non Résoluble</h3>
                     <p><strong>1. Modélisation :</strong></p>
-                    <p>L'équation est : $${a}x + ${b}y = ${c}$$</p>
-                    
+                    <p>L'équation est : $${a}x + ${b}y = ${c}$.</p>
                     <p><strong>2. Condition d'Existence des solutions :</strong></p>
-                    <ul>
-                        <li><strong>Calcul du PGCD :</strong> $\\text{PGCD}(${a}, ${b}) = \\mathbf{${d}}$.</li>
-                        <li><strong>Vérification :</strong> Pour que l'équation ait des solutions, il faut que le PGCD $${d}$ divise la masse totale $${c}$.</li>
-                        <li>Puisque $${c} = ${d} \\times ${quotient} + ${r}$ (où le reste $\\mathbf{${r} \\neq 0}$), le $\\text{PGCD}(${a}, ${b}) = ${d}$ <strong>ne divise pas</strong> ${c}$.</li>
-                    </ul>
-
-                    <p><strong>3. Conclusion :</strong></p>
-                    <p>Le théorème de résolution des équations diophantiennes nous apprend que la quantité $${c}$ doit être un </strong>multiple du $\\textbf{PGCD}$<strong> des coefficients $${a}$ et $${b}$.</p>
+                    <p>L'équation admet des solutions dans $\\mathbb{Z}^2$ si et seulement si $\\text{PGCD}(a, b)$ divise $c$.</p>
+                    <p>On calcule $\\text{PGCD}(${a}, ${b}) = \\mathbf{${d}}$.</p>
+                    <p>Puisque $\\text{PGCD}(${a}, ${b}) = ${d}$ ne divise pas $${c}$ (car ${c} \\bmod ${d} = ${c % d} \neq 0$), l'équation n'admet <strong>aucune</strong> solution dans $\\mathbb{Z}^2$.</p>
                     <div class="final-answer-box failure">
-                        <strong>RÉPONSE FINALE :</strong><br>
-                        Il n'existe <strong>aucune combinaison entière</strong> de sacs pour atteindre la masse exacte de $${c}$ kg, car $${c}$ n'est pas divisible par le $\\text{PGCD}(${a}, ${b}) = ${d}$.
+                        Il est impossible de transporter la masse exacte de $${c}$ kg, car $${c}$ n'est pas divisible par le $\\text{PGCD}(${a}, ${b}) = ${d}$.
                     </div>
                 `;
+                // Correction : Le contenu de l'indication est mis à jour séparément.
+                newIndicationContent = `<p id="ex3-indication-content"><strong>Indication :</strong> Calculer $\\text{PGCD}(${a}, ${b})$ et vérifier s'il divise $${c}$.</p>`;
             }
 
             // Mise à jour finale et affichage MathJax
             document.getElementById('ex3-question-list').innerHTML = questionListHTML;
             document.getElementById('ex3-solution-content').innerHTML = solContent;
             
-            // Assure le rendu MathJax pour la question et la solution
+            // Étape de correction : On met à jour le contenu de l'indication statique avec les paramètres du nouvel exercice.
+            document.getElementById('ex3-indication-content').innerHTML = newIndicationContent;
+            
+            // Masquer l'aide et réinitialiser le bouton lors de la génération
+            document.getElementById('help-ex3-ind1').style.display = 'none';
+            document.getElementById('help-ex3-sol1').style.display = 'none';
+            document.querySelector('#container-ex3 [data-content-id="help-ex3-ind1"]').textContent = 'Indication';
+            document.querySelector('#container-ex3 [data-content-id="help-ex3-ind1"]').style.backgroundColor = '#ffcc00';
+            document.querySelector('#container-ex3 [data-content-id="help-ex3-sol1"]').textContent = 'Solution (Détaillée)';
+            document.querySelector('#container-ex3 [data-content-id="help-ex3-sol1"]').style.backgroundColor = '#33cc33';
+
+            // Assure le rendu MathJax pour la question, la solution ET l'indication (corrigé pour inclure help-ex3-ind1)
             if (window.MathJax) {
-                MathJax.typeset([document.getElementById('ex3-question-list'), document.getElementById('help-ex3-sol1')]);
+                MathJax.typeset([document.getElementById('ex3-question-list'), document.getElementById('help-ex3-sol1'), document.getElementById('help-ex3-ind1')]);
             }
         }
 
 
-        // --- Initialisation au chargement de la page ---
+        // --- Initialisation au chargement de la page ---\r\n
         document.addEventListener('DOMContentLoaded', () => {
             // Lancement du premier problème dynamique (Ex 1, Ex 2 et Ex 3)
             if (typeof generateNewDiophantineProblem === 'function') {
