@@ -51,86 +51,154 @@
         .resultat {
             font-weight: bold;
             font-size: 1.2em;
-            color: #e74c3c;
-            background-color: #fcebeb;
-            padding: 10px;
-            border: 1px dashed #e74c3c;
-            border-radius: 4px;
-            text-align: center;
-        }
-        button {
-            background-color: white;
-            color: #3498db;
-            border: 2px solid white;
-            padding: 10px 20px;
-            font-size: 1em;
-            cursor: pointer;
-            border-radius: 4px;
-            font-weight: bold;
-            margin-top: 10px;
-            transition: 0.3s;
-        }
-        button:hover {
-            background-color: #2980b9;
-            color: white;
-            border-color: #2980b9;
+            color: #e74c3d; /* Ajout d'une couleur plus visible pour le résultat */
         }
     </style>
 </head>
 <body>
-
+	
     <header>
-        <h1>Méthode de l'Algorithme d'Euclide Étendu</h1>
-        <button onclick="genererNouveauCalcul()">🔄 Générer de nouvelles valeurs</button>
+
+
+
+        <h1>Algorithme d'Euclide Étendu\(\qquad\)<span style = "font-size:0.8em;"><a href="https://ldv78100ym-hub.github.io/HOME/" target="_blank" style="text-decoration: none;">
+            <button
+                style="padding: 10px 20px; font-size: 1em; cursor: pointer; border: none; border-radius: 5px; background-color: #5bc0de; color: white;">
+                Autres chapitres 📚
+            </button>
+        </a></span></h1>
     </header>
 
     <main>
-        <p>
-            L'Algorithme d'Euclide Étendu (AEE) permet de trouver le \(\text{PGCD}(a,b)\) ainsi que les coefficients de Bézout \((u,v)\) tels que :
-            $$au + bv = \text{PGCD}(a,b)$$
-        </p>
+        <h2>Identité de Bézout</h2>
+        <p>L'algorithme d'Euclide étendu permet de trouver le PGCD \(d\) de deux entiers \(a\) et \(b\) ainsi que les coefficients de Bézout \(u\) et \(v\) tels que :</p>
+        <div class="math-block">
+            $$\mathbf{au + bv = \text{PGCD}(a, b)}$$
+        </div>
 
-        <h2 id="titre-application">Application ...</h2>
+        <div style="text-align: center; margin-top: 20px;">
+            <button onclick="generateNewEuclideProblem()" 
+                style="padding: 12px 20px; font-size: 1.1em; background-color: #2ecc71; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                Générer un nouvel exemple
+            </button>
+        </div>
 
-        <section>
-            <h3>1. Algorithme d'Euclide Standard (Descente)</h3>
-            <p>On cherche le PGCD par divisions euclidiennes successives :</p>
-            <div id="descente-euclide" class="math-block">
-                </div>
-            <p id="phrase-pgcd">Le dernier reste non nul est ...</p>
-        </section>
+        <h2 id="titre-application">Application avec \(a\) et \(b\)</h2>
 
-        <section>
-            <h3>2. Remontée pour l'Identité de Bézout</h3>
-            <p>On isole le reste dans chaque équation pour préparer la remontée :</p>
-
-            <h4>A. Équations des restes (isolés) :</h4>
-            <div id="equations-restes" class="math-block">
-                </div>
-
-            <h4>B. Résultat de la substitution :</h4>
-            <p>En remontant les équations successives, on exprime le PGCD comme combinaison linéaire de \(a\) et \(b\).</p>
-            
-            <div class="resultat" id="resultat-final">
-                </div>
-        </section>
+        <h3>1. Descente de l'Algorithme d'Euclide (PGCD)</h3>
+        <div id="euclide-descente" class="math-block">
+            <p>Cliquez sur "Générer un nouvel exemple" pour commencer.</p>
+        </div>
+        
+        <h3>2. Remontée de l'Algorithme (Coefficients de Bézout)</h3>
+        <div id="euclide-remontee" class="math-block">
+            <p>Les étapes de l'algorithme d'Euclide étendu (remontée) seront affichées ici.</p>
+        </div>
+        
+        <h3>3. Résultat Final</h3>
+        <div id="resultat-final" class="resultat math-block">
+            <p>PGCD et coefficients de Bézout.</p>
+        </div>
     </main>
 
+    <div style="text-align: center; margin-top: 50px;">
+        <button id="show-auteur-btn" onclick="toggleDisclaimer()" 
+            style="padding: 10px 20px; font-size: 1em; cursor: pointer; border: none; border-radius: 5px; background-color: #333; color: white;">
+            Auteur et Droits d'Auteur
+        </button>
+    </div>
+
+    <div id="disclaimer-content" style="margin-top: 20px; padding: 20px; border: 1px solid #ddd; border-radius: 5px; background-color: #fff; display: none;">
+        <h3>Droits d'Auteur et Source</h3>
+            <p><strong>Auteur du problème :</strong> Yann Merdy</p>
+            <p><strong>Droits d'Auteur et Utilisation :</strong></p>
+            <p>Ce contenu, y compris l'énoncé, les solutions et le code interactif, est protégé par les droits d'auteur. <strong>Toute utilisation à des fins commerciales, y compris la revente, la distribution ou l'intégration dans des produits commerciaux, est...</strong></p>
+    </div>
     <script>
-        // Fonction pour générer un entier aléatoire entre min et max
-        function getRandomInt(min, max) {
-            return Math.floor(Math.random() * (max - min + 1)) + min;
+        // --- NOUVELLE FONCTION POUR DROITS D'AUTEUR ---
+        function toggleDisclaimer() {
+            const disclaimer = document.getElementById('disclaimer-content');
+            const button = document.getElementById('show-auteur-btn');
+            const isVisible = disclaimer.style.display === 'block';
+
+            if (isVisible) {
+                disclaimer.style.display = 'none';
+                button.textContent = 'Auteur et Droits d\'Auteur';
+                button.style.backgroundColor = '#333';
+            } else {
+                disclaimer.style.display = 'block';
+                button.textContent = 'Masquer les Droits d\'Auteur';
+                button.style.backgroundColor = '#dc3545';
+            }
+        }
+        // --- Fin NOUVELLE FONCTION ---
+        
+        // --- FONCTIONS UTILITAIRES MATHÉMATIQUES (PGCD & Euclide Étendu) ---
+        
+        /**
+         * Calcule le PGCD de deux nombres.
+         */
+        function gcd(a, b) {
+            a = Math.abs(a);
+            b = Math.abs(b);
+            while (b) {
+                [a, b] = [b, a % b];
+            }
+            return a;
         }
 
-        // Fonction principale de calcul et d'affichage
-        function genererNouveauCalcul() {
-            // 1. Génération des nombres aléatoires
-            // On s'assure que b > a pour la cohérence de l'affichage initial
-            let val1 = getRandomInt(20, 100);
-            let val2 = getRandomInt(20, 200);
+        /**
+         * Algorithme d'Euclide Étendu
+         */
+        function extendedEuclideanAlgorithm(a, b) {
+            let s_old = 1, s_new = 0; // Coeff de b
+            let t_old = 0, t_new = 1; // Coeff de a
+            let r_old = b, r_new = a;
+
+            while (r_new > 0) {
+                let quotient = Math.floor(r_old / r_new);
+
+                // Mise à jour r
+                let temp_r = r_new;
+                r_new = r_old - quotient * r_new;
+                r_old = temp_r;
+
+                // Mise à jour s (coeff de b)
+                let temp_s = s_new;
+                s_new = s_old - quotient * s_new;
+                s_old = temp_s;
+
+                // Mise à jour t (coeff de a)
+                let temp_t = t_new;
+                t_new = t_old - quotient * t_new;
+                t_old = temp_t;
+            }
+
+            // Retourne [PGCD, coeff_a (t_old), coeff_b (s_old)]
+            return {
+                pgcd: r_old,
+                u: t_old,
+                v: s_old
+            };
+        }
+
+        /**
+         * Génère un nouvel exemple et exécute l'algorithme
+         */
+        function generateNewEuclideProblem() {
+            // 1. Génération des nombres (aléa entre 10 et 200)
+            let val1 = Math.floor(Math.random() * (190 - 10 + 1)) + 10;
+            let val2 = Math.floor(Math.random() * (190 - 10 + 1)) + 10;
+
+            // Assurer que les nombres ne sont pas égaux et que le PGCD n'est pas trivial
+            while (val1 === val2 || gcd(val1, val2) === 1 || gcd(val1, val2) === Math.min(val1, val2)) {
+                val1 = Math.floor(Math.random() * (190 - 10 + 1)) + 10;
+                val2 = Math.floor(Math.random() * (190 - 10 + 1)) + 10;
+            }
             
             let a = Math.min(val1, val2);
             let b = Math.max(val1, val2);
+            let pgcd = gcd(a, b);
 
             // Mise à jour du titre
             document.getElementById('titre-application').innerHTML = `Application avec \\(a=${a}\\) et \\(b=${b}\\)`;
@@ -139,87 +207,39 @@
             let r0 = b, r1 = a;
             let descenteHTML = "";
             let equationsRestesHTML = "";
-            let steps = []; // Pour stocker les étapes r = r0 - q*r1
+            let i = 0;
 
             while (r1 > 0) {
-                let q = Math.floor(r0 / r1);
-                let r = r0 % r1;
-
-                // Affichage descente : 138 = 2 * 48 + 42
-                descenteHTML += `$$${r0} = ${q} \\times ${r1} + ${r}$$`;
-
-                if (r > 0) {
-                    // Stockage pour l'équation des restes : 42 = 138 - 2 * 48
-                    // On stocke sous forme d'objet pour traiter plus tard si besoin
-                    steps.push({ r: r, big: r0, q: q, small: r1 });
-                    
-                    // Affichage équation reste (inverse)
-                    equationsRestesHTML += `$$\\mathbf{${r}} = ${r0} - ${q} \\times ${r1}$$`;
+                let quotient = Math.floor(r0 / r1);
+                let reste = r0 % r1;
+                
+                descenteHTML += `$$r_${i} = ${r0} = ${quotient} \\times ${r1} + ${reste} \\quad (r_{${i+1}} = ${reste})$$`;
+                
+                if (reste > 0) {
+                    equationsRestesHTML += `$$${reste} = r_{${i}} - ${quotient} \\times r_{${i+1}}$$`;
                 }
 
                 r0 = r1;
-                r1 = r;
+                r1 = reste;
+                i++;
             }
+            document.getElementById('euclide-descente').innerHTML = descenteHTML;
 
-            let pgcd = r0;
-
-            // Injection HTML Descente
-            document.getElementById('descente-euclide').innerHTML = descenteHTML;
-            document.getElementById('phrase-pgcd').innerHTML = `Le dernier reste non nul est \\(\\mathbf{${pgcd}}\\). Donc, \\(\\text{PGCD}(${a}, ${b}) = ${pgcd}\\).`;
+            // 3. Remontée de l'Algorithme (Calcul des coefficients)
             
-            // Injection HTML Équations Restes (inversées pour l'affichage, du dernier au premier)
-            // On inverse l'ordre pour montrer du plus petit reste au plus grand (comme dans l'exemple original)
-            // L'exemple original montrait : 6=..., puis 42=... (ordre croissant des restes ?)
-            // Non, l'original montre : 6 (dernier reste) puis 42 (avant-dernier).
-            // Donc on inverse steps pour l'affichage
-            let equationsRestesDisplay = "";
-            for (let i = steps.length - 1; i >= 0; i--) {
-                let s = steps[i];
-                equationsRestesDisplay += `$$\\mathbf{${s.r}} = ${s.big} - ${s.q} \\times ${s.small}$$`;
-            }
-            document.getElementById('equations-restes').innerHTML = equationsRestesDisplay;
-
-            // 3. Calcul des Coefficients de Bézout (Algorithme Étendu réel)
-            // On réinitialise pour le calcul mathématique pur
-            let u0 = 1, u1 = 0; // Coeffs pour b (le plus grand)
-            let v0 = 0, v1 = 1; // Coeffs pour a (le plus petit)
+            let result = extendedEuclideanAlgorithm(a, b);
+            let u = result.u;
+            let v = result.v;
             
-            // Note: b * u + a * v = PGCD
-            // Algorithme itératif standard
-            let tempB = b;
-            let tempA = a;
+            let remonteeHTML = `
+                <p>On exprime le PGCD $\\mathbf{${pgcd}}$ comme combinaison linéaire de $a$ et $b$ en remontant les équations de reste :</p>
+                <div class="math-block">
+                ${equationsRestesHTML}
+                </div>
+            `;
+
+            document.getElementById('euclide-remontee').innerHTML = remonteeHTML;
             
-            let s0 = 1, s1 = 0; // coeff de b
-            let t0 = 0, t1 = 1; // coeff de a
-            
-            let r_old = b, r_new = a;
-            let s_old = 1, s_new = 0;
-            let t_old = 0, t_new = 1;
-
-            while (r_new !== 0) {
-                let quotient = Math.floor(r_old / r_new);
-                
-                let temp_r = r_new;
-                r_new = r_old - quotient * r_new;
-                r_old = temp_r;
-
-                let temp_s = s_new;
-                s_new = s_old - quotient * s_new;
-                s_old = temp_s;
-
-                let temp_t = t_new;
-                t_new = t_old - quotient * t_new;
-                t_old = temp_t;
-            }
-            
-            // À la fin de la boucle, r_old est le PGCD
-            // s_old est le coeff de b
-            // t_old est le coeff de a
-            // Vérification : b*s_old + a*t_old = PGCD
-
-            let u = t_old; // Coeff devant a
-            let v = s_old; // Coeff devant b
-
             // 4. Affichage Résultat
             let resultHTML = `
                 L'identité de Bézout est vérifiée : \\(${a}u + ${b}v = ${pgcd}\\).<br>
@@ -227,16 +247,16 @@
                 <small style="color:gray;">(Vérification : \\(${a} \\times (${u}) + ${b} \\times (${v}) = ${a*u + b*v})\\)</small>
             `;
             document.getElementById('resultat-final').innerHTML = resultHTML;
-
-            // Demander à MathJax de retraiter la page pour afficher les nouvelles formules
+            
             if (window.MathJax) {
-                MathJax.typeset();
+                MathJax.typeset(); // Assure le rendu des nouvelles formules LaTeX
             }
         }
-
-        // Lancer au chargement de la page
-        window.onload = genererNouveauCalcul;
+        
+        // Initialisation au chargement de la page
+        document.addEventListener('DOMContentLoaded', () => {
+             generateNewEuclideProblem(); // Lance le premier problème
+        });
     </script>
-
 </body>
 </html>
