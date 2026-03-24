@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Règles de Divisibilité | Maths & Popups Démonstratifs</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/contrib/auto-render.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Poppins', 'Inter', system-ui, -apple-system, 'Roboto', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(145deg, #f5f7fc 0%, #eef2f5 100%);
+            min-height: 100vh;
+            padding: 2rem 1.5rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .hero {
+            text-align: center;
+            margin-bottom: 2.5rem;
+            position: relative;
+        }
+
+        h1 {
+            font-size: 2.6rem;
+            background: linear-gradient(135deg, #1a2a3f, #2c3e66);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            letter-spacing: -0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .sub {
+            color: #2c3e66;
+            font-weight: 500;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .canvas-wrapper {
+            background: rgba(255,255,240,0.4);
+            border-radius: 3rem;
+            margin: 0.5rem auto 1.5rem;
+            max-width: 900px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: auto;
+            background: #ffffffd9;
+            border-radius: 2rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            backdrop-filter: blur(1px);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.8rem;
+            margin-top: 1rem;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(2px);
+            border-radius: 2rem;
+            padding: 1.5rem 1.3rem 1.8rem;
+            transition: all 0.25s ease;
+            box-shadow: 0 12px 28px -8px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255,255,240,0.6);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 32px -12px rgba(0, 0, 0, 0.2);
+            background: white;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #dfe6ef;
+            padding-bottom: 0.6rem;
+        }
+
+        .divisor {
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: linear-gradient(120deg, #1e3c72, #2b4a82);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .rule-text {
+            font-size: 1rem;
+            color: #1f2a44;
+            line-height: 1.45;
+            margin: 1rem 0 1.2rem 0;
+            background: #f0f4fa;
+            padding: 0.8rem;
+            border-radius: 1.2rem;
+        }
+
+        .latex-demo {
+            background: #eef2ff;
+            padding: 0.5rem 0.8rem;
+            border-radius: 1rem;
+            font-size: 0.95rem;
+            margin: 0.8rem 0;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+            color: #0a2540;
+            overflow-x: auto;
+        }
+
+        button {
+            background: #1f3a5f;
+            border: none;
+            padding: 0.7rem 1.4rem;
+            border-radius: 2rem;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 0.6rem;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        button:hover {
+            background: #0f2b48;
+            transform: scale(0.97);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(6px);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            font-family: 'Segoe UI', system-ui;
+        }
+
+        .modal-content {
+            background: #fffef7;
+            max-width: 550px;
+            width: 90%;
+            border-radius: 2rem;
+            padding: 1.8rem 2rem;
+            box-shadow: 0 25px 40px rgba(0,0,0,0.3);
+            position: relative;
+            animation: fadeSlideUp 0.25s ease-out;
+            border-top: 8px solid #2b4a82;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        @keyframes fadeSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #cbd5e1;
+            padding-bottom: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .modal-header h2 {
+            font-size: 1.8rem;
+            color: #1e2f47;
+        }
+
+        .close-modal {
+            font-size: 2rem;
+            font-weight: bold;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: #5e6f8d;
+            padding: 0 0.5rem;
+            transition: 0.1s;
+        }
+
+        .close-modal:hover {
+            color: #b91c1c;
+            transform: scale(1.1);
+        }
+
+        .modal-body {
+            font-size: 1rem;
+            line-height: 1.5;
+            color: #1f2a3e;
+        }
+
+        .modal-body p {
+            margin: 1rem 0;
+        }
+
+        .math-demo {
+            background: #e9edf4;
+            padding: 0.75rem;
+            border-radius: 1rem;
+            text-align: center;
+            font-family: monospace;
+            margin: 1rem 0;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            font-size: 0.85rem;
+            color: #4a5c72;
+            border-top: 1px solid #cfdfed;
+            padding-top: 1.8rem;
+        }
+
+        .copyright-btn {
+            background: #e2e8f0;
+            color: #475569;
+            margin-top: 1.5rem;
+            box-shadow: none;
+        }
+
+        .copyright-btn:hover {
+            background: #cbd5e1;
+            color: #1e293b;
+        }
+
+        @media (max-width: 680px) {
+            body {
+                padding: 1rem;
+            }
+            .divisor {
+                font-size: 1.8rem;
+            }
+            .card {
+                padding: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="hero">
+        <h1>📐 Règles de divisibilité</h1>
+        <div class="sub">🔢 2, 3, 4, 5, 7, 11, 13, 17, 19 — clic sur un bouton pour la démonstration</div>
+        <div class="canvas-wrapper">
+            <canvas id="divisCanvas" width="800" height="130" style="width:100%; height:auto; max-width:800px; aspect-ratio:800/130"></canvas>
+        </div>
+    </div>
+
+    <div class="grid" id="cards-container"></div>
+    <footer>
+        <p>⚡ Chaque règle est accompagnée d'une preuve ou d'une justification LaTeX. Popup explicative avec exemples concrets.</p>
+        <button id="copyrightBtn" class="copyright-btn">© Droits d'auteur</button>
+    </footer>
+</div>
+
+<div id="popupModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalTitle">Règle de divisibilité</h2>
+            <button class="close-modal" id="closeModalBtn">&times;</button>
+        </div>
+        <div class="modal-body" id="modalBody">
+            </div>
+    </div>
+</div>
+
+<script>
+    const rulesData = [
+        { 
+            n: 2, 
+            shortRule: "Un nombre est divisible par 2 si son dernier chiffre est pair (0, 2, 4, 6, 8).",
+            demoContent: `
+                <p><strong>🔍 Démonstration :</strong> Tout entier $N$ peut s'écrire $N = 10k + d$ où $d$ est le chiffre des unités. Puisque $10k$ est divisible par $2$, $N \\equiv d \\pmod{2}$. Donc $N$ est divisible par $2$ si et seulement si $d$ est pair.</p>
+                <div class="math-demo">Exemple : $178$ → dernier chiffre $8$ (pair) → $178/2 = 89$ ✅.</div>
+                <p>En général : $N = 10q + r$, avec $r \\in \\{0,2,4,6,8\\}$ ⇒ $2 \\mid N$.</p>
+            `
+        },
+        { 
+            n: 3, 
+            shortRule: "Un nombre est divisible par 3 si la somme de ses chiffres est divisible par 3.",
+            demoContent: `
+                <p><strong>📐 Preuve modulaire :</strong> $10 \\equiv 1 \\pmod{3}$, donc $10^k \\equiv 1 \\pmod{3}$. Ainsi $N = \\sum a_k 10^k \\equiv \\sum a_k \\pmod{3}$. Donc $3 \\mid N \\iff 3 \\mid \\text{(somme des chiffres)}$.</p>
+                <div class="math-demo">Exemple : $471$ → $4+7+1=12$ → $12/3=4$ → $471/3=157$ ✅.</div>
+                <p>Application immédiate, indépendante de l'ordre des chiffres.</p>
+            `
+        },
+        { 
+            n: 4, 
+            shortRule: "Un nombre est divisible par 4 si ses deux derniers chiffres forment un nombre divisible par 4.",
+            demoContent: `
+                <p><strong>✍️ Justification :</strong> $100$ est divisible par $4$ ($100 = 4\\times25$). Donc tout nombre $N = 100 \\times q + \\overline{ab}$ vérifie $N \\equiv \\overline{ab} \\pmod{4}$.</p>
+                <div class="math-demo">Exemple : $5\\,316$ → deux derniers chiffres $16$, $16/4=4$ → $5316/4=1329$ ✅.</div>
+                <p>Il suffit de regarder la dizaine et l'unité.</p>
+            `
+        },
+        { 
+            n: 5, 
+            shortRule: "Un nombre est divisible par 5 si son dernier chiffre est 0 ou 5.",
+            demoContent: `
+                <p><strong>🧩 Preuve rapide :</strong> $N = 10k + u$ avec $u$ le chiffre des unités. $10k$ est multiple de $5$, donc $N \\equiv u \\pmod{5}$. Ainsi $5 \\mid N$ ssi $u=0$ ou $u=5$.</p>
+                <div class="math-demo">Exemple : $3\\,425$ → termine par $5$ → divisible par $5$ ($3425/5=685$).</div>
+                <p>Règle universelle.</p>
+            `
+        },
+        { 
+            n: 7, 
+            shortRule: "Pour 7 : on double le dernier chiffre et on soustrait au reste du nombre. Le résultat doit être multiple de 7. (procédé itératif)",
+            demoContent: `
+                <p><strong>⚙️ Méthode de soustraction :</strong> Soit $N = 10a + b$ (b unité). $10a+b \\equiv 0 \\pmod{7} \\iff a - 2b \\equiv 0 \\pmod{7}$ (car $10 \\equiv 3 \\pmod{7}$ et $N$ divisible par $7$ ssi $a-2b$ divisible par $7$).</p>
+                <div class="math-demo">Exemple : $161$ → $a=16$, $b=1$ → $16-2\\times1=14$ → $14/7=2$ ✅. Donc $161/7=23$.</div>
+                <p>On peut répéter le procédé sur le résultat intermédiaire.</p>
+            `
+        },
+        { 
+            n: 11, 
+            shortRule: "Différence entre somme des chiffres de rang pair et somme des chiffres de rang impair est multiple de 11 (ou 0).",
+            demoContent: `
+                <p><strong>🔁 Démonstration :</strong> $10 \\equiv -1 \\pmod{11}$, donc $10^k \\equiv (-1)^k \\pmod{11}$. Soit $N = \\sum\\limits_{i=0}^{m} a_i 10^i$, alors $N \\equiv \\sum\\limits_{i=0}^{m} a_i (-1)^i \\pmod{11}$. Donc $11\\mid N$ ssi la somme alternée est multiple de $11$.</p>
+                <div class="math-demo">Exemple : $2\\,794$ → somme impaire (unités=4 + centaines=7) = 11 ; somme paire (dizaines=9 + milliers=2)=11 → diff=0 → divisible par 11 ✅ ($2794/11=254$).</div>
+            `
+        },
+        { 
+            n: 13, 
+            shortRule: "Règle itérative : multiplier le dernier chiffre par 4 et ajouter au reste du nombre. Le résultat doit être multiple de 13.",
+            demoContent: `
+                <p><strong>🧮 Preuve algébrique :</strong> $N = 10a + b$, on a $10a+b \\equiv 0$ ⇒ $a \\equiv -b/10$. Avec $10^{-1} \\equiv 4 \\pmod{13}$, on a $a+4b \\equiv 0$. Donc $N$ divisible par 13 ssi $a+4b$ divisible par 13.</p>
+                <div class="math-demo">Exemple : $2\\,873$ → dernier chiffre 3 → $287 + 4\\times3 = 287+12=299$ → $29+4\\times9=29+36=65$ → $65/13=5$ ✅. Donc $2873/13=221$.</div>
+            `
+        },
+        { 
+            n: 17, 
+            shortRule: "Multiplier le dernier chiffre par 5 et soustraire au reste du nombre. Le résultat doit être divisible par 17.",
+            demoContent: `
+                <p><strong>🔢 Démonstration modulaire :</strong> $N=10a+b$, l'inverse de 10 modulo 17 est 12, et $-12 \\equiv 5 \\pmod{17}$. Donc la condition est $a - 5b \\equiv 0 \\pmod{17}$.</p>
+                <div class="math-demo">Exemple : $1\\,105$ → dernier 5 → $110 - 5\\times5 = 110-25=85$ → $85/17=5$ ✅. $1105/17=65$.</div>
+            `
+        },
+        { 
+            n: 19, 
+            shortRule: "Multiplier le dernier chiffre par 2 et ajouter au reste du nombre. Le résultat doit être multiple de 19.",
+            demoContent: `
+                <p><strong>📌 Justification :</strong> $N=10a+b$ ; $10a+b \\equiv 0 \\pmod{19} \\iff 2(10a+b) \\equiv 0 \\iff 20a+2b \\equiv 0$. Comme $20 \\equiv 1 \\pmod{19}$, on a bien $a+2b \\equiv 0$.</p>
+                <div class="math-demo">Exemple : $513$ → dernier 3 → $51 + 2\\times3 = 51+6=57$ → $57/19=3$ ✅. $513/19=27$.</div>
+            `
+        }
+    ];
+
+    const container = document.getElementById('cards-container');
+    const modal = document.getElementById('popupModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalBody = document.getElementById('modalBody');
+    const closeBtn = document.getElementById('closeModalBtn');
+    const copyrightBtn = document.getElementById('copyrightBtn');
+    const canvas = document.getElementById('divisCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+
+    function buildCards() {
+        container.innerHTML = '';
+        rulesData.forEach(rule => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            const latexShort = (rule.n === 2) ? "$\\text{dernier chiffre pair}$" :
+                               (rule.n === 3) ? "$\\sum \\text{chiffres} \\equiv 0 \\pmod{3}$" :
+                               (rule.n === 4) ? "$\\overline{ab} \\equiv 0 \\pmod{4}$" :
+                               (rule.n === 5) ? "$d \\in \\{0,5\\}$" :
+                               (rule.n === 7) ? "$a-2b \\equiv 0 \\pmod{7}$" :
+                               (rule.n === 11) ? "$\\sum (-1)^i a_i \\equiv 0$" :
+                               (rule.n === 13) ? "$a+4b \\equiv 0 \\pmod{13}$" :
+                               (rule.n === 17) ? "$a-5b \\equiv 0 \\pmod{17}$" :
+                               "$a+2b \\equiv 0 \\pmod{19}$";
+            card.innerHTML = `
+                <div class="card-header">
+                    <span class="divisor">Divisibilité par ${rule.n}</span>
+                    <span style="font-family: monospace;">${latexShort}</span>
+                </div>
+                <div class="rule-text">${rule.shortRule}</div>
+                <div class="latex-demo">🔢 $\\text{Test rapide : } $${latexShort}</div>
+                <button class="demo-btn" data-id="${rule.n}">📖 Démontrer la règle</button>
+            `;
+            container.appendChild(card);
+        });
+
+        document.querySelectorAll('.demo-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const divisor = parseInt(btn.getAttribute('data-id'), 10);
+                const found = rulesData.find(r => r.n === divisor);
+                if (found) {
+                    openModal(`✨ Règle de divisibilité par ${found.n} ✨`, found.demoContent);
+                }
+            });
+        });
+    }
+
+    function openModal(title, contentHTML) {
+        modalTitle.innerHTML = title;
+        modalBody.innerHTML = contentHTML;
+        modal.style.display = 'flex';
+        
+        if (window.renderMathInElement) {
+            renderMathInElement(modalBody, {
+                delimiters: [
+                    {left: '$$', right: '$$', display: true},
+                    {left: '$', right: '$', display: false}
+                ]
+            });
+        }
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeModalFunc() {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+
+    copyrightBtn.addEventListener('click', () => {
+        const legalText = `
+            <p><strong>© Droits d'auteur et Informations Légales</strong></p>
+            <p>Ce site est la propriété exclusive de <strong>Yann Merdy</strong>.</p>
+            <p>Tous les droits de reproduction et de diffusion du contenu, y compris les fichiers, les exercices et le code, sont réservés pour l'usage strictement pédagogique au sein de l'établissement.</p>
+            <p>Toute reproduction ou distribution commerciale est strictement interdite.</p>
+            <p>Pour toute question, écrire à : <a href="mailto:yann.merdy@gmail.com">yann.merdy@gmail.com</a>.</p>
+            <p><strong>Année académique : 2025 - 2026.</strong></p>
+        `;
+        openModal("Informations Légales", legalText);
+    });
+
+    closeBtn.addEventListener('click', closeModalFunc);
+    window.addEventListener('click', (e) => {
+        if (e.target === modal) closeModalFunc();
+    });
+
+    function resizeCanvas() {
+        const containerElem = canvas.parentElement;
+        const maxWidth = Math.min(800, containerElem.clientWidth);
+        canvas.style.width = `${maxWidth}px`;
+        canvas.width = maxWidth;
+        canvas.height = 130;
+        width = canvas.width;
+        height = canvas.height;
+    }
+    
+    function drawCanvasFrame() {
+        if (!ctx) return;
+        ctx.clearRect(0, 0, width, height);
+        ctx.fillStyle = "#ffffffdd";
+        ctx.fillRect(0, 0, width, height);
+        
+        const numbers = ["2","3","4","5","7","11","13","17","19"];
+        const xPositions = [0.08, 0.18, 0.28, 0.38, 0.52, 0.64, 0.74, 0.84, 0.94];
+        
+        for (let i = 0; i < numbers.length; i++) {
+            const x = width * xPositions[i];
+            const y = height * 0.5 + Math.sin(Date.now() * 0.002 + i) * 8;
+            ctx.fillStyle = `rgba(30, 58, 95, ${0.5 + Math.sin(Date.now() * 0.003 + i)*0.2})`;
+            ctx.font = `${Math.min(26, width/15)}px "Segoe UI", monospace`;
+            ctx.fillText(numbers[i], x - 12, y);
+        }
+        
+        ctx.beginPath();
+        ctx.strokeStyle = "#2b4a82";
+        ctx.lineWidth = 2;
+        ctx.setLineDash([8, 12]);
+        ctx.moveTo(width*0.1, height-18);
+        ctx.lineTo(width*0.9, height-18);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        
+        ctx.font = `italic ${Math.min(14, width/25)}px "Segoe UI"`;
+        ctx.fillStyle = "#2c5a7a";
+        ctx.fillText("modularité & critères universels", width*0.35, height-8);
+        
+        ctx.font = `bold ${Math.min(18, width/22)}px "Segoe UI"`;
+        ctx.fillStyle = "#0f2b3f";
+        ctx.fillText("📌 Divisibilité", 15, 28);
+    }
+    
+    function animateCanvas() {
+        drawCanvasFrame();
+        requestAnimationFrame(animateCanvas);
+    }
+    
+    window.addEventListener('resize', resizeCanvas);
+    
+    document.addEventListener("DOMContentLoaded", () => {
+        buildCards();
+        if (window.renderMathInElement) {
+            renderMathInElement(document.body, {
+                delimiters: [
+                    {left: '$$', right: '$$', display: true},
+                    {left: '$', right: '$', display: false}
+                ]
+            });
+        }
+        resizeCanvas();
+        animateCanvas();
+    });
+</script>
+</body>
+</html>
